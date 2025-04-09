@@ -15,11 +15,11 @@ public class User {
     @Email
     @NotBlank(message = "Email не должен быть null или пустым")
     String email;
-    @NotNull(message = "Login не должен быть null")
-    @NotBlank(message = "Login не должен быть пустым")
+    @NotBlank(message = "Login не должен быть null или пустым")
     @Pattern(regexp = "\\S*", message = "Login не должен содержать пробелы")
     String login;
     String name;
     @Past
+    @NotNull
     LocalDate birthday;
 }

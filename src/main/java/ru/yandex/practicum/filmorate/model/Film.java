@@ -15,9 +15,9 @@ public class Film {
     @NotBlank(message = "Название не должно быть null или пустым")
     String name;
     @Size(max = 200, message = "Максимальная длина описания — 200 символов")
-    @NotNull(message = "Описание не может быть null")
     String description;
     @PastOrPresent
+    @NotNull
     LocalDate releaseDate;
     @Positive(message = "Продолжительность фильма должна быть положительным числом")
     int duration;
