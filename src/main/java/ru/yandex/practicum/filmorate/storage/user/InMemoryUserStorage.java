@@ -53,48 +53,55 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User getUserById(Long id) {
-        checkUserExist(id);
-        return users.get(id);
+        return checkUserExistAndGet(id);
     }
 
     @Override
     public User addFriend(Long id, Long friendId) {
-        checkUserExist(id);
-        checkUserExist(friendId);
-        users.get(id).getFriends().add(friendId);
-        users.get(friendId).getFriends().add(id);
-        return users.get(id);
+        User user1 = checkUserExistAndGet(id);
+        User user2 = checkUserExistAndGet(friendId);
+        user1.getFriends().add(friendId);
+        user2.getFriends().add(id);
+        return user1;
     }
 
     @Override
-    public void checkUserExist(Long id) {
+    public User checkUserExistAndGet(Long id) {
         if (!users.containsKey(id)) {
             String errorMessage = String.format("Пользователь с id %d не найден", id);
             throw new UserNotFoundException(errorMessage);
         }
+        return users.get(id);
     }
 
     @Override
-    public void deleteFriend(Long id, Long friendId) {
-        checkUserExist(id);
-        checkUserExist(friendId);
-        users.get(id).getFriends().remove(friendId);
-        users.get(friendId).getFriends().remove(id);
+    public User deleteFriend(Long id, Long friendId) {
+        User user1 = checkUserExistAndGet(id);
+        User user2 = checkUserExistAndGet(friendId);
+        user1.getFriends().remove(friendId);
+        user2.getFriends().remove(id);
+        return user1;
     }
 
     @Override
     public Collection<User> getUserFriends(Long id) {
-        checkUserExist(id);
-        return users.get(id).getFriends().stream().map(users::get).toList();
+        User user = checkUserExistAndGet(id);
+        return user.getFriends().stream()
+                .map(users::get)
+                .toList();
     }
 
     @Override
     public Collection<User> getCommonFriends(Long id, Long otherId) {
-        checkUserExist(id);
-        checkUserExist(otherId);
-        return users.get(id).getFriends().stream().filter(o1 -> {
-            return users.get(otherId).getFriends().stream().anyMatch(o1::equals);
-        }).map(users::get).toList();
+        User user1 = checkUserExistAndGet(id);
+        User user2 = checkUserExistAndGet(otherId);
+        Set<Long> user2friends = user2.getFriends();
+        return user1.getFriends().stream()
+                .filter(o1 -> {
+                    return user2friends.stream().anyMatch(o1::equals);
+                })
+                .map(users::get)
+                .toList();
     }
 
     private long getNextId() {

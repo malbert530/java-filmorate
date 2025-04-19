@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -16,7 +15,6 @@ import java.util.*;
 @RequiredArgsConstructor
 public class InMemoryFilmStorage implements FilmStorage {
     private final Map<Long, Film> films = new HashMap<>();
-    private final UserStorage userStorage;
 
     @Override
     public Collection<Film> findAll() {
@@ -38,7 +36,7 @@ public class InMemoryFilmStorage implements FilmStorage {
             log.warn(errorMessage);
             throw new ValidationException(errorMessage);
         }
-        checkFilmExist(newFilm.getId());
+        checkFilmExistAndGet(newFilm.getId());
         validateFilmDateRelease(newFilm);
         Film oldFilm = films.get(newFilm.getId());
         oldFilm.setName(newFilm.getName());
@@ -48,33 +46,33 @@ public class InMemoryFilmStorage implements FilmStorage {
         return oldFilm;
     }
 
-    private void checkFilmExist(Long id) {
+    private Film checkFilmExistAndGet(Long id) {
         if (!films.containsKey(id)) {
             String errorMessage = String.format("Фильм с id %d не найден", id);
             log.warn(errorMessage);
             throw new FilmNotFoundException(errorMessage);
         }
+        return films.get(id);
     }
 
     @Override
     public Film putLike(Long id, Long userId) {
-        checkFilmExist(id);
-        userStorage.checkUserExist(userId);
-        films.get(id).getLikes().add(userId);
+        checkFilmExistAndGet(id).getLikes().add(userId);
         return films.get(id);
     }
 
     @Override
     public Film deleteLike(Long id, Long userId) {
-        checkFilmExist(id);
-        userStorage.checkUserExist(userId);
-        films.get(id).getLikes().remove(userId);
+        checkFilmExistAndGet(id).getLikes().remove(userId);
         return films.get(id);
     }
 
     @Override
     public Collection<Film> getPopularFilms(Integer count) {
-        return films.values().stream().sorted((f1, f2) -> f2.getLikes().size() - f1.getLikes().size()).limit(count).toList();
+        return films.values().stream()
+                .sorted((f1, f2) -> f2.getLikes().size() - f1.getLikes().size())
+                .limit(count)
+                .toList();
     }
 
     private long getNextId() {
