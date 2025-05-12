@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
@@ -55,9 +56,10 @@ public class UserController {
     }
 
     @PutMapping
-    public User update(@RequestBody @Valid User newUser) {
-        log.info("Получен HTTP-запрос на обновление пользователя: {}", newUser);
-        User updatedUser = userService.update(newUser);
+    public User update(@RequestBody @Valid UpdateUserRequest request) {
+        log.info("Получен HTTP-запрос на обновление пользователя: {}", request);
+        ;
+        User updatedUser = userService.update(request);
         log.info("Успешно обработан HTTP-запрос на обновление пользователя: {}", updatedUser);
         return updatedUser;
     }
@@ -65,12 +67,14 @@ public class UserController {
     @PutMapping("/{id}/friends/{friendId}")
     public User addFriend(@PathVariable Long id, @PathVariable Long friendId) {
         log.info("Получен HTTP-запрос на добавление в друзья пользователей с id {} и id {}", id, friendId);
-        return userService.addFriend(id, friendId);
+        User user = userService.addFriend(id, friendId);
+        return user;
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
     public User deleteFriend(@PathVariable Long id, @PathVariable Long friendId) {
         log.info("Получен HTTP-запрос на удаление из друзей пользователей с id {} и id {}", id, friendId);
-        return userService.deleteFriend(id, friendId);
+        User user = userService.deleteFriend(id, friendId);
+        return user;
     }
 }

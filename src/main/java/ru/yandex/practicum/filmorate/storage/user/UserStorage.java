@@ -21,5 +21,5 @@ public interface UserStorage {
 
     Collection<User> getCommonFriends(Long id, Long otherId);
 
-    User checkUserExistAndGet(Long id);
+    boolean checkEmailExist(String email);
 }

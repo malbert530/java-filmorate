@@ -1,19 +1,26 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
+import ru.yandex.practicum.filmorate.dto.FilmDto;
+import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
+import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
 
 public interface FilmStorage {
-    Collection<Film> findAll();
+    Collection<FilmDto> findAll();
 
-    Film create(Film film);
+    FilmDto create(NewFilmRequest film);
 
-    Film update(Film newFilm);
+    FilmDto update(UpdateFilmRequest newFilm);
 
-    Film putLike(Long id, Long userId);
+    void putLike(Long id, Long userId);
 
-    Film deleteLike(Long id, Long userId);
+    void deleteLike(Long id, Long userId);
 
-    Collection<Film> getPopularFilms(Integer count);
+    Collection<FilmDto> getPopularFilms(Integer count);
+
+    Film getFilmById(Long id);
+
+    FilmDto getFilmDtoById(Long id);
 }
