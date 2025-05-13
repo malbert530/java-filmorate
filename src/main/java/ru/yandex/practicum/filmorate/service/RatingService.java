@@ -17,7 +17,6 @@ public class RatingService {
     }
 
     public Rating getRatingById(Integer id) {
-        Rating ratingById = ratingStorage.getRatingById(id);
-        return ratingById;
+        return ratingStorage.getRatingById(id);
     }
 }

@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Rating implements Comparable<Rating> {
-    private int id;
+    private Integer id;
     private String name;
 
     @Override

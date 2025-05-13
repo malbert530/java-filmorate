@@ -13,7 +13,7 @@ import ru.yandex.practicum.filmorate.storage.rating.RatingDbStorage;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @JdbcTest
-@AutoConfigureTestDatabase
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Import({RatingDbStorage.class})
 @ComponentScan(basePackages = "ru.yandex.practicum.filmorate")
