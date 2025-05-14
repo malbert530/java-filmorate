@@ -1,18 +1,17 @@
-package ru.yandex.practicum.filmorate.model;
+package ru.yandex.practicum.filmorate.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Rating;
 
 import java.time.LocalDate;
-import java.util.Set;
 import java.util.TreeSet;
 
 @Data
-@AllArgsConstructor
-@RequiredArgsConstructor
-public class Film {
+public class NewFilmRequest {
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     Long id;
     @NotBlank(message = "Название не должно быть null или пустым")
     String name;
@@ -23,7 +22,11 @@ public class Film {
     LocalDate releaseDate;
     @Positive(message = "Продолжительность фильма должна быть положительным числом")
     Integer duration;
-    Set<Long> likes;
-    Rating rating;
-    TreeSet<Genre> genre;
+
+    Rating mpa;
+    TreeSet<Genre> genres;
+
+    public boolean hasGenre() {
+        return genres != null;
+    }
 }

@@ -4,7 +4,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
+import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
+import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.Collection;
@@ -18,44 +20,57 @@ public class FilmController {
     private final FilmService filmService;
 
     @GetMapping
-    public Collection<Film> findAll() {
+    public Collection<FilmDto> findAll() {
         log.info("Получен HTTP-запрос на получение всех фильмов");
         return filmService.findAll();
     }
 
+    @GetMapping("/{id}")
+    public FilmDto getFilmById(@PathVariable Long id) {
+        log.info("Получен HTTP-запрос на получение фильма по id {}", id);
+        FilmDto film = filmService.getFilmById(id);
+        log.info("Успешно обработан HTTP-запрос на получение фильма по id {}", id);
+        return film;
+    }
+
     @GetMapping("/popular")
-    public Collection<Film> getPopularFilms(@RequestParam Integer count) {
+    public Collection<FilmDto> getPopularFilms(@RequestParam Integer count) {
+        log.info("Получен HTTP-запрос на получение {} самых популярных фильмов", count);
         if (Objects.isNull(count)) {
             count = 10;
         }
-        return filmService.getPopularFilms(count);
+        Collection<FilmDto> popularFilms = filmService.getPopularFilms(count);
+        log.info("Успешно обработан HTTP-запрос на получение {} самых популярных фильмов", count);
+        return popularFilms;
     }
 
     @PostMapping
-    public Film create(@RequestBody @Valid Film film) {
-        log.info("Получен HTTP-запрос на создание фильма: {}", film);
-        Film createdFilm = filmService.create(film);
+    public FilmDto create(@RequestBody @Valid NewFilmRequest request) {
+        log.info("Получен HTTP-запрос на создание фильма: {}", request);
+        FilmDto createdFilm = filmService.create(request);
         log.info("Успешно обработан HTTP-запрос на создание фильма: {}", createdFilm);
         return createdFilm;
     }
 
     @PutMapping
-    public Film update(@RequestBody @Valid Film newFilm) {
+    public FilmDto update(@RequestBody @Valid UpdateFilmRequest newFilm) {
         log.info("Получен HTTP-запрос на обновление фильма: {}", newFilm);
-        Film updatedFilm = filmService.update(newFilm);
+        FilmDto updatedFilm = filmService.update(newFilm);
         log.info("Успешно обработан HTTP-запрос на обновление фильма: {}", updatedFilm);
         return updatedFilm;
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public Film putLike(@PathVariable Long id, @PathVariable Long userId) {
+    public void putLike(@PathVariable Long id, @PathVariable Long userId) {
         log.info("Получен HTTP-запрос на добавление лайка для фильма с id {} от пользователя с id {}", id, userId);
-        return filmService.putLike(id, userId);
+        filmService.putLike(id, userId);
+        log.info("Успешно обработан HTTP-запрос на добавление лайка для фильма с id {} от пользователя с id {}", id, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public Film deleteLike(@PathVariable Long id, @PathVariable Long userId) {
+    public void deleteLike(@PathVariable Long id, @PathVariable Long userId) {
         log.info("Получен HTTP-запрос на удаление лайка для фильма с id {} от пользователя с id {}", id, userId);
-        return filmService.deleteLike(id, userId);
+        filmService.deleteLike(id, userId);
+        log.info("Успешно обработан HTTP-запрос на удаление лайка для фильма с id {} от пользователя с id {}", id, userId);
     }
 }
