@@ -22,8 +22,7 @@ public class ReviewDbStorage implements ReviewStorage {
     private final JdbcTemplate jdbc;
     private final ReviewRowMapper mapper;
 
-    private static final String INSERT_REVIEW_SQL = "INSERT INTO reviews (content, is_positive, user_id, film_id, useful) " +
-            "VALUES (?, ?, ?, ?, ?)";
+    private static final String INSERT_REVIEW_SQL = "INSERT INTO reviews (content, is_positive, user_id, film_id, useful) VALUES (?, ?, ?, ?, ?)";
 
     private static final String SELECT_REVIEW_BY_ID = "SELECT * FROM reviews WHERE review_id = ?";
 
@@ -43,20 +42,19 @@ public class ReviewDbStorage implements ReviewStorage {
 
     private static final String CHECK_REVIEW_LIKE_EXISTS = "SELECT COUNT(*) FROM review_likes WHERE review_id = ? AND user_id = ?";
 
+    private static final String GET_REACTION_TYPE = "SELECT is_positive FROM review_likes WHERE review_id = ? AND user_id = ?";
+
     @Override
     public Review create(Review review) {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
 
         jdbc.update(connection -> {
-            var ps = connection.prepareStatement(
-                    INSERT_REVIEW_SQL,
-                    Statement.RETURN_GENERATED_KEYS
-            );
+            var ps = connection.prepareStatement(INSERT_REVIEW_SQL, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, review.getContent());
             ps.setBoolean(2, review.getIsPositive());
             ps.setLong(3, review.getUserId());
             ps.setLong(4, review.getFilmId());
-            ps.setInt(5, 0);
+            ps.setInt(5, 0); // изначально рейтинг полезности равен 0
             return ps;
         }, keyHolder);
 
@@ -66,14 +64,12 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public Review update(Review review) {
-        int updated = jdbc.update(UPDATE_REVIEW_SQL,
-                review.getContent(),
-                review.getIsPositive(),
-                review.getReviewId());
+        int updated = jdbc.update(UPDATE_REVIEW_SQL, review.getContent(), review.getIsPositive(), review.getReviewId());
 
         if (updated == 0) {
             throw new ReviewNotFoundException("Не удалось обновить отзыв с id = " + review.getReviewId());
         }
+
         return getById(review.getReviewId());
     }
 
@@ -119,18 +115,32 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public void removeLike(Long reviewId, Long userId) {
-        jdbc.update(DELETE_REVIEW_LIKE, reviewId, userId);
-        jdbc.update(UPDATE_USEFUL_INCREMENT, -1, reviewId);
+        Boolean isPositive = getReactionType(reviewId, userId);
+        if (Boolean.TRUE.equals(isPositive)) {
+            jdbc.update(DELETE_REVIEW_LIKE, reviewId, userId);
+            jdbc.update(UPDATE_USEFUL_INCREMENT, -1, reviewId);
+        }
     }
 
     @Override
     public void removeDislike(Long reviewId, Long userId) {
-        jdbc.update(DELETE_REVIEW_LIKE, reviewId, userId);
-        jdbc.update(UPDATE_USEFUL_INCREMENT, 1, reviewId);
+        Boolean isPositive = getReactionType(reviewId, userId);
+        if (Boolean.FALSE.equals(isPositive)) {
+            jdbc.update(DELETE_REVIEW_LIKE, reviewId, userId);
+            jdbc.update(UPDATE_USEFUL_INCREMENT, 1, reviewId);
+        }
     }
 
     private boolean likeExists(Long reviewId, Long userId) {
         Integer count = jdbc.queryForObject(CHECK_REVIEW_LIKE_EXISTS, Integer.class, reviewId, userId);
         return count != null && count > 0;
+    }
+
+    private Boolean getReactionType(Long reviewId, Long userId) {
+        try {
+            return jdbc.queryForObject(GET_REACTION_TYPE, Boolean.class, reviewId, userId);
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
     }
 }
