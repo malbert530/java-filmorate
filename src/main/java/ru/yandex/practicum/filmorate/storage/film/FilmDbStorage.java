@@ -35,6 +35,7 @@ public class FilmDbStorage implements FilmStorage {
     private static final String INSERT_FILM_GENRE = "INSERT INTO film_genre(film_id, genre_id) VALUES (?, ?)";
     private static final String UPDATE_QUERY = "UPDATE films " +
             "SET name = ?, description = ?, release_date = ?, duration = ?, rating_id = ? WHERE id = ?";
+    private static final String DELETE_FILM_QUERY = "DELETE FROM films WHERE id = ?";
     private static final String DELETE_FILM_GENRES = "DELETE FROM film_genre WHERE film_id = ?";
     private static final String INSERT_LIKE = "INSERT INTO film_user_like (film_id, user_id) VALUES (?, ?)";
     private static final String DELETE_LIKE = "DELETE FROM film_user_like WHERE film_id = ? AND user_id = ?";
@@ -113,6 +114,17 @@ public class FilmDbStorage implements FilmStorage {
             }
         }
         return newFilm;
+    }
+
+    @Override
+    public Film deleteById(Long id) {
+        // Also used to check for existence
+        Film deletedFilm = getFilmById(id);
+        int RowsDeleted = jdbc.update(DELETE_FILM_QUERY, id);
+        if (RowsDeleted == 0) {
+            throw new RuntimeException("Не удалось обновить данные");
+        }
+        return deletedFilm;
     }
 
     @Override
