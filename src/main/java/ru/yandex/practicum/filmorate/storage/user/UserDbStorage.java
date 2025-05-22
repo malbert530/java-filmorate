@@ -33,7 +33,7 @@ public class UserDbStorage implements UserStorage {
     private static final String FIND_USER_FRIENDS = "SELECT * FROM users " +
             "WHERE id IN(SELECT friend_id FROM friends WHERE user_id = ?)";
     private static final String DELETE_FRIEND_QUERY = "DELETE FROM friends WHERE user_id = ? AND friend_id = ?";
-
+    private static final String DELETE_USER_QUERY = "DELETE FROM users WHERE id = ?";
 
     private final JdbcTemplate jdbc;
     private final UserRowMapper mapper;
@@ -80,6 +80,17 @@ public class UserDbStorage implements UserStorage {
             throw new RuntimeException("Не удалось обновить данные");
         }
         return newUser;
+    }
+
+    @Override
+    public User deleteById(Long id) {
+        // Also used to check for existence
+        User deletedUser = getUserById(id);
+        int RowsDeleted = jdbc.update(DELETE_USER_QUERY, id);
+        if (RowsDeleted == 0) {
+            throw new RuntimeException("Не удалось обновить данные");
+        }
+        return deletedUser;
     }
 
     @Override
