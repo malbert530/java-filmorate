@@ -120,8 +120,8 @@ public class FilmDbStorage implements FilmStorage {
     public Film deleteById(Long id) {
         // Also used to check for existence
         Film deletedFilm = getFilmById(id);
-        int RowsDeleted = jdbc.update(DELETE_FILM_QUERY, id);
-        if (RowsDeleted == 0) {
+        int rowsDeleted = jdbc.update(DELETE_FILM_QUERY, id);
+        if (rowsDeleted == 0) {
             throw new RuntimeException("Не удалось обновить данные");
         }
         return deletedFilm;
