@@ -42,7 +42,9 @@ public class UserService {
     }
 
     public User deleteById(Long id) {
-        return userStorage.deleteById(id);
+        User deletedUser = userStorage.getUserById(id);
+        userStorage.deleteById(id);
+        return deletedUser;
     }
 
     public User getUserById(Long id) {

@@ -11,7 +11,7 @@ public interface FilmStorage {
 
     Film update(Film film);
 
-    Film deleteById(Long id);
+    void deleteById(Long id);
 
     void putLike(Long id, Long userId);
 

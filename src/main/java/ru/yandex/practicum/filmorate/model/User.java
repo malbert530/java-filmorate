@@ -12,7 +12,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Data
-@AllArgsConstructor
 @RequiredArgsConstructor
 public class User {
     Long id;
@@ -26,15 +25,16 @@ public class User {
     @Past
     @NotNull
     LocalDate birthday;
-    @JsonIgnore
+
     Set<Long> friends = new HashSet<>();
 
     @JsonCreator
-    public User(Long id, String email, String login, String name, LocalDate birthday) {
+    public User(Long id, String email, String login, String name, LocalDate birthday, Set<Long> friends) {
         this.id = id;
         this.email = email;
         this.login = login;
         this.name = (name == null || name.isBlank()) ? login : name;
         this.birthday = birthday;
+        this.friends = friends;
     }
 }
