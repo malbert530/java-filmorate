@@ -44,6 +44,8 @@ public class ReviewDbStorage implements ReviewStorage {
 
     private static final String GET_REACTION_TYPE = "SELECT is_positive FROM review_likes WHERE review_id = ? AND user_id = ?";
 
+    private static final String DELETE_ALL_REVIEW_LIKES = "DELETE FROM review_likes WHERE review_id = ?";
+
     @Override
     public Review create(Review review) {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
@@ -75,6 +77,7 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public void delete(Long id) {
+        deleteAllLikesForReview(id);
         jdbc.update(DELETE_REVIEW_SQL, id);
     }
 
@@ -142,5 +145,9 @@ public class ReviewDbStorage implements ReviewStorage {
         } catch (EmptyResultDataAccessException e) {
             return null;
         }
+    }
+
+    private void deleteAllLikesForReview(Long reviewId) {
+        jdbc.update(DELETE_ALL_REVIEW_LIKES, reviewId);
     }
 }
