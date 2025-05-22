@@ -36,7 +36,9 @@ public class FilmController {
     @DeleteMapping("/{id}")
     public FilmDto deleteFilmById(@PathVariable Long id) {
         log.info("Получен HTTP-запрос на удаление фильма с id {}", id);
-        return filmService.deleteById(id);
+        FilmDto deletedFilm = filmService.deleteById(id);
+        log.info("Успешно обработан HTTP-запрос на удаление фильма {}", deletedFilm);
+        return deletedFilm;
     }
 
     @GetMapping("/popular")
