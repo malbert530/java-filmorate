@@ -83,14 +83,11 @@ public class UserDbStorage implements UserStorage {
     }
 
     @Override
-    public User deleteById(Long id) {
-        // Also used to check for existence
-        User deletedUser = getUserById(id);
+    public void deleteById(Long id) {
         int rowsDeleted = jdbc.update(DELETE_USER_QUERY, id);
         if (rowsDeleted == 0) {
             throw new RuntimeException("Не удалось обновить данные");
         }
-        return deletedUser;
     }
 
     @Override

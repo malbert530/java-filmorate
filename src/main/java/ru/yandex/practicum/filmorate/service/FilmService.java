@@ -75,8 +75,9 @@ public class FilmService {
     }
 
     public FilmDto deleteById(Long id) {
-        Film film = filmStorage.deleteById(id);
-        return FilmMapper.convertToDto(film);
+        Film deletedFilm = filmStorage.getFilmById(id);
+        filmStorage.deleteById(id);
+        return FilmMapper.convertToDto(deletedFilm);
     }
 
     public void putLike(Long id, Long userId) {
