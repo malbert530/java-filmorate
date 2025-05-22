@@ -40,8 +40,6 @@ public class ReviewDbStorage implements ReviewStorage {
 
     private static final String UPDATE_USEFUL_INCREMENT = "UPDATE reviews SET useful = useful + ? WHERE review_id = ?";
 
-    private static final String CHECK_REVIEW_LIKE_EXISTS = "SELECT COUNT(*) FROM review_likes WHERE review_id = ? AND user_id = ?";
-
     private static final String GET_REACTION_TYPE = "SELECT is_positive FROM review_likes WHERE review_id = ? AND user_id = ?";
 
     private static final String DELETE_ALL_REVIEW_LIKES = "DELETE FROM review_likes WHERE review_id = ?";
@@ -100,18 +98,32 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public void addLike(Long reviewId, Long userId) {
-        if (likeExists(reviewId, userId)) {
-            throw new ValidationException("Пользователь уже поставил лайк или дизлайк этому отзыву.");
+        Boolean existing = getReactionType(reviewId, userId);
+
+        if (existing != null) {
+            if (existing) {
+                throw new ValidationException("Пользователь уже поставил лайк.");
+            } else {
+                removeDislike(reviewId, userId);
+            }
         }
+
         jdbc.update(INSERT_REVIEW_LIKE, reviewId, userId, true);
         jdbc.update(UPDATE_USEFUL_INCREMENT, 1, reviewId);
     }
 
     @Override
     public void addDislike(Long reviewId, Long userId) {
-        if (likeExists(reviewId, userId)) {
-            throw new ValidationException("Пользователь уже поставил лайк или дизлайк этому отзыву.");
+        Boolean existing = getReactionType(reviewId, userId);
+
+        if (existing != null) {
+            if (!existing) {
+                throw new ValidationException("Пользователь уже поставил дизлайк.");
+            } else {
+                removeLike(reviewId, userId);
+            }
         }
+
         jdbc.update(INSERT_REVIEW_LIKE, reviewId, userId, false);
         jdbc.update(UPDATE_USEFUL_INCREMENT, -1, reviewId);
     }
@@ -132,11 +144,6 @@ public class ReviewDbStorage implements ReviewStorage {
             jdbc.update(DELETE_REVIEW_LIKE, reviewId, userId);
             jdbc.update(UPDATE_USEFUL_INCREMENT, 1, reviewId);
         }
-    }
-
-    private boolean likeExists(Long reviewId, Long userId) {
-        Integer count = jdbc.queryForObject(CHECK_REVIEW_LIKE_EXISTS, Integer.class, reviewId, userId);
-        return count != null && count > 0;
     }
 
     private Boolean getReactionType(Long reviewId, Long userId) {
