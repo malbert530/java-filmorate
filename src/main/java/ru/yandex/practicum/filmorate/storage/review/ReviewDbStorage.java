@@ -22,27 +22,40 @@ public class ReviewDbStorage implements ReviewStorage {
     private final JdbcTemplate jdbc;
     private final ReviewRowMapper mapper;
 
-    private static final String INSERT_REVIEW_SQL = "INSERT INTO reviews (content, is_positive, user_id, film_id, useful) VALUES (?, ?, ?, ?, ?)";
+    private static final String INSERT_REVIEW_SQL =
+            "INSERT INTO reviews (content, is_positive, user_id, film_id, useful) VALUES (?, ?, ?, ?, ?)";
 
-    private static final String SELECT_REVIEW_BY_ID = "SELECT * FROM reviews WHERE review_id = ?";
+    private static final String SELECT_REVIEW_BY_ID =
+            "SELECT * FROM reviews WHERE review_id = ?";
 
-    private static final String UPDATE_REVIEW_SQL = "UPDATE reviews SET content = ?, is_positive = ? WHERE review_id = ?";
+    private static final String UPDATE_REVIEW_SQL =
+            "UPDATE reviews SET content = ?, is_positive = ? WHERE review_id = ?";
 
-    private static final String DELETE_REVIEW_SQL = "DELETE FROM reviews WHERE review_id = ?";
+    private static final String DELETE_REVIEW_SQL =
+            "DELETE FROM reviews WHERE review_id = ?";
 
-    private static final String SELECT_ALL = "SELECT * FROM reviews ORDER BY useful DESC LIMIT ?";
+    private static final String SELECT_ALL =
+            "SELECT * FROM reviews ORDER BY useful DESC LIMIT ?";
 
-    private static final String SELECT_ALL_BY_FILM = "SELECT * FROM reviews WHERE film_id = ? ORDER BY useful DESC LIMIT ?";
+    private static final String SELECT_ALL_BY_FILM =
+            "SELECT * FROM reviews WHERE film_id = ? ORDER BY useful DESC LIMIT ?";
 
-    private static final String INSERT_REVIEW_LIKE = "INSERT INTO review_likes (review_id, user_id, is_positive) VALUES (?, ?, ?)";
+    private static final String INSERT_REVIEW_LIKE =
+            "INSERT INTO review_likes (review_id, user_id, is_like) VALUES (?, ?, ?)";
 
-    private static final String DELETE_REVIEW_LIKE = "DELETE FROM review_likes WHERE review_id = ? AND user_id = ?";
+    private static final String DELETE_REVIEW_LIKE =
+            "DELETE FROM review_likes WHERE review_id = ? AND user_id = ?";
 
-    private static final String UPDATE_USEFUL_INCREMENT = "UPDATE reviews SET useful = useful + ? WHERE review_id = ?";
+    private static final String UPDATE_USEFUL_INCREMENT =
+            "UPDATE reviews SET useful = useful + ? WHERE review_id = ?";
 
-    private static final String GET_REACTION_TYPE = "SELECT is_positive FROM review_likes WHERE review_id = ? AND user_id = ?";
+    private static final String GET_REACTION_TYPE =
+            "SELECT is_like FROM review_likes WHERE review_id = ? AND user_id = ?";
 
-    private static final String DELETE_ALL_REVIEW_LIKES = "DELETE FROM review_likes WHERE review_id = ?";
+    private static final String UPDATE_REVIEW_LIKE_SET_TRUE =
+            "UPDATE review_likes SET is_like = true WHERE review_id = ? AND user_id = ?";
+    private static final String UPDATE_REVIEW_LIKE_SET_FALSE =
+            "UPDATE review_likes SET is_like = false WHERE review_id = ? AND user_id = ?";
 
     @Override
     public Review create(Review review) {
@@ -54,28 +67,31 @@ public class ReviewDbStorage implements ReviewStorage {
             ps.setBoolean(2, review.getIsPositive());
             ps.setLong(3, review.getUserId());
             ps.setLong(4, review.getFilmId());
-            ps.setInt(5, 0); // изначально рейтинг полезности равен 0
+            ps.setInt(5, 0);
             return ps;
         }, keyHolder);
 
-        Long id = keyHolder.getKeyAs(Long.class);
-        return getById(id);
+        review.setReviewId(keyHolder.getKeyAs(Long.class));
+        review.setUseful(0);
+        return review;
     }
 
     @Override
     public Review update(Review review) {
-        int updated = jdbc.update(UPDATE_REVIEW_SQL, review.getContent(), review.getIsPositive(), review.getReviewId());
+        int updated = jdbc.update(UPDATE_REVIEW_SQL,
+                review.getContent(),
+                review.getIsPositive(),
+                review.getReviewId());
 
         if (updated == 0) {
             throw new ReviewNotFoundException("Не удалось обновить отзыв с id = " + review.getReviewId());
         }
 
-        return getById(review.getReviewId());
+        return review;
     }
 
     @Override
     public void delete(Long id) {
-        deleteAllLikesForReview(id);
         jdbc.update(DELETE_REVIEW_SQL, id);
     }
 
@@ -104,7 +120,9 @@ public class ReviewDbStorage implements ReviewStorage {
             if (existing) {
                 throw new ValidationException("Пользователь уже поставил лайк.");
             } else {
-                removeDislike(reviewId, userId);
+                jdbc.update(UPDATE_REVIEW_LIKE_SET_TRUE, reviewId, userId);
+                jdbc.update(UPDATE_USEFUL_INCREMENT, 2, reviewId);
+                return;
             }
         }
 
@@ -120,7 +138,9 @@ public class ReviewDbStorage implements ReviewStorage {
             if (!existing) {
                 throw new ValidationException("Пользователь уже поставил дизлайк.");
             } else {
-                removeLike(reviewId, userId);
+                jdbc.update(UPDATE_REVIEW_LIKE_SET_FALSE, reviewId, userId);
+                jdbc.update(UPDATE_USEFUL_INCREMENT, -2, reviewId);
+                return;
             }
         }
 
@@ -130,8 +150,8 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public void removeLike(Long reviewId, Long userId) {
-        Boolean isPositive = getReactionType(reviewId, userId);
-        if (Boolean.TRUE.equals(isPositive)) {
+        Boolean isLike = getReactionType(reviewId, userId);
+        if (Boolean.TRUE.equals(isLike)) {
             jdbc.update(DELETE_REVIEW_LIKE, reviewId, userId);
             jdbc.update(UPDATE_USEFUL_INCREMENT, -1, reviewId);
         }
@@ -139,8 +159,8 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public void removeDislike(Long reviewId, Long userId) {
-        Boolean isPositive = getReactionType(reviewId, userId);
-        if (Boolean.FALSE.equals(isPositive)) {
+        Boolean isLike = getReactionType(reviewId, userId);
+        if (Boolean.FALSE.equals(isLike)) {
             jdbc.update(DELETE_REVIEW_LIKE, reviewId, userId);
             jdbc.update(UPDATE_USEFUL_INCREMENT, 1, reviewId);
         }
@@ -152,9 +172,5 @@ public class ReviewDbStorage implements ReviewStorage {
         } catch (EmptyResultDataAccessException e) {
             return null;
         }
-    }
-
-    private void deleteAllLikesForReview(Long reviewId) {
-        jdbc.update(DELETE_ALL_REVIEW_LIKES, reviewId);
     }
 }
