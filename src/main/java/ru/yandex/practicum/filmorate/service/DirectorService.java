@@ -16,7 +16,7 @@ public class DirectorService {
         return directorStorage.findAll();
     }
 
-    public Director getDirectorById(Integer id) {
+    public Director getDirectorById(Long id) {
         return directorStorage.getDirectorById(id);
     }
 
@@ -32,7 +32,7 @@ public class DirectorService {
         return directorStorage.update(directorToUpdate);
     }
 
-    public Director deleteDirectorById(Integer id) {
+    public Director deleteDirectorById(Long id) {
         Director directorToDelete = directorStorage.getDirectorById(id);
         directorStorage.deleteDirectorById(id);
         return directorToDelete;

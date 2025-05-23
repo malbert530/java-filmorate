@@ -20,7 +20,7 @@ public interface FilmStorage {
 
     Film getFilmById(Long id);
 
-    Collection<Film> getFilmByDirectorIdSortedByYear(Integer id);
+    Collection<Film> getFilmByDirectorIdSortedByYear(Long id);
 
-    Collection<Film> getFilmByDirectorIdSortedByLikes(Integer id);
+    Collection<Film> getFilmByDirectorIdSortedByLikes(Long id);
 }

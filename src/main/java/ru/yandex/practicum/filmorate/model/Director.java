@@ -8,11 +8,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Director implements Comparable<Director> {
-    private Integer id;
+    private Long id;
     private String name;
 
     @Override
     public int compareTo(Director o) {
-        return id - o.id;
+        return id.compareTo(o.getId());
     }
 }

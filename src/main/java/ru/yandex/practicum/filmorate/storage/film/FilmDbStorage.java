@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.storage.film;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,7 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.film.mapper.FilmExtractor;
 
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
 
@@ -110,22 +112,14 @@ public class FilmDbStorage implements FilmStorage {
 
         Long id = keyHolder.getKeyAs(Long.class);
 
-        TreeSet<Genre> genre = film.getGenre();
-        if (genre != null) {
-            for (Genre g : genre) {
-                int update = jdbc.update(INSERT_FILM_GENRE, id, g.getId());
-                String message = update == 1 ? "Жанры удалось обновить" : "Жанры не удалось обновить";
-                log.info(message);
-            }
+        if (film.getGenre() != null) {
+            List<Integer> genreIds = film.getGenre().stream().map(Genre::getId).toList();
+            batchInsertGenre(id, genreIds);
         }
 
-        TreeSet<Director> directors = film.getDirectors();
-        if (directors != null) {
-            for (Director director : directors) {
-                int update = jdbc.update(INSERT_FILM_DIRECTOR, id, director.getId());
-                String message = update == 1 ? "Режиссеров удалось обновить" : "Режиссеров не удалось обновить";
-                log.info(message);
-            }
+        if (film.getDirectors() != null) {
+            List<Long> directorIds = film.getDirectors().stream().map(Director::getId).toList();
+            batchInsertDirector(id, directorIds);
         }
 
         if (id != null) {
@@ -149,24 +143,16 @@ public class FilmDbStorage implements FilmStorage {
             throw new RuntimeException("Не удалось обновить данные");
         }
 
-        TreeSet<Genre> genre = newFilm.getGenre();
         jdbc.update(DELETE_FILM_GENRES, newFilm.getId());
-        if (genre != null) {
-            for (Genre g : genre) {
-                int update = jdbc.update(INSERT_FILM_GENRE, newFilm.getId(), g.getId());
-                String message = update == 1 ? "Жанры удалось обновить" : "Жанры не удалось обновить";
-                log.info(message);
-            }
+        if (newFilm.getGenre() != null) {
+            List<Integer> genreIds = newFilm.getGenre().stream().map(Genre::getId).toList();
+            batchInsertGenre(newFilm.getId(), genreIds);
         }
 
-        TreeSet<Director> directors = newFilm.getDirectors();
         jdbc.update(DELETE_FILM_DIRECTORS, newFilm.getId());
-        if (directors != null) {
-            for (Director director : directors) {
-                int update = jdbc.update(INSERT_FILM_DIRECTOR, newFilm.getId(), director.getId());
-                String message = update == 1 ? "Режиссеров удалось обновить" : "Режиссеров не удалось обновить";
-                log.info(message);
-            }
+        if (newFilm.getDirectors() != null) {
+            List<Long> directorIds = newFilm.getDirectors().stream().map(Director::getId).toList();
+            batchInsertDirector(newFilm.getId(), directorIds);
         }
 
         return newFilm;
@@ -199,12 +185,42 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> getFilmByDirectorIdSortedByYear(Integer id) {
+    public List<Film> getFilmByDirectorIdSortedByYear(Long id) {
         return jdbc.query(FIND_DIRECTOR_FILMS_SORTED_BY_YEAR, filmExtractor, id);
     }
 
     @Override
-    public Collection<Film> getFilmByDirectorIdSortedByLikes(Integer id) {
+    public List<Film> getFilmByDirectorIdSortedByLikes(Long id) {
         return jdbc.query(FIND_DIRECTOR_FILMS_SORTED_BY_LIKES, filmExtractor, id);
+    }
+
+    private void batchInsertDirector(Long filmId, List<Long> directorIds) {
+        jdbc.batchUpdate(INSERT_FILM_DIRECTOR, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                ps.setLong(1, filmId);
+                ps.setLong(2, directorIds.get(i));
+            }
+
+            @Override
+            public int getBatchSize() {
+                return directorIds.size();
+            }
+        });
+    }
+
+    private void batchInsertGenre(Long filmId, List<Integer> genreIds) {
+        jdbc.batchUpdate(INSERT_FILM_GENRE, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                ps.setLong(1, filmId);
+                ps.setInt(2, genreIds.get(i));
+            }
+
+            @Override
+            public int getBatchSize() {
+                return genreIds.size();
+            }
+        });
     }
 }

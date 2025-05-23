@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.Collection;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -72,7 +73,7 @@ public class FilmController {
     }
 
     @GetMapping("/director/{id}")
-    public Collection<FilmDto> getFilmsByDirectorId(@PathVariable Integer id, @RequestParam String sortBy) {
+    public List<FilmDto> getFilmsByDirectorId(@PathVariable Long id, @RequestParam String sortBy) {
         log.info("Получен HTTP-запрос на получение списка фильмов по id режиссера {}", id);
         return filmService.getFilmsByDirectorId(id, sortBy);
     }

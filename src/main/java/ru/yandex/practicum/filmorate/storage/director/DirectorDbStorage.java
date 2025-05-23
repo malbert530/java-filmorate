@@ -36,7 +36,7 @@ public class DirectorDbStorage {
         return new TreeSet<>(directors);
     }
 
-    public Director getDirectorById(Integer id) {
+    public Director getDirectorById(Long id) {
         try {
             return jdbc.queryForObject(FIND_BY_ID_QUERY, mapper, id);
         } catch (EmptyResultDataAccessException e) {
@@ -55,7 +55,7 @@ public class DirectorDbStorage {
             return ps;
         }, keyHolder);
 
-        Integer id = keyHolder.getKeyAs(Integer.class);
+        Long id = keyHolder.getKeyAs(Long.class);
 
         if (id != null) {
             director.setId(id);
@@ -74,7 +74,7 @@ public class DirectorDbStorage {
         return directorToUpdate;
     }
 
-    public void deleteDirectorById(Integer id) {
+    public void deleteDirectorById(Long id) {
         int rowsUpdated = jdbc.update(DELETE_QUERY, id);
         if (rowsUpdated == 0) {
             throw new DirectorNotFoundException("Не удалось обновить данные");

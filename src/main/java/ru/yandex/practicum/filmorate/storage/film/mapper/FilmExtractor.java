@@ -44,7 +44,7 @@ public class FilmExtractor implements ResultSetExtractor<List<Film>> {
                 }
                 film.setGenre(genres);
 
-                Integer directorId = (Integer) rs.getObject("director_id");
+                Long directorId = (Long) rs.getObject("director_id");
                 String directorName = rs.getString("director_name");
                 TreeSet<Director> directors = new TreeSet<>();
                 if (directorId != null) {
@@ -63,7 +63,7 @@ public class FilmExtractor implements ResultSetExtractor<List<Film>> {
                     filmGenres.add(genre);
                 }
                 TreeSet<Director> filmDirectors = filmMap.get(currentFilmId).getDirectors();
-                Integer directorId = (Integer) rs.getObject("director_id");
+                Long directorId = (Long) rs.getObject("director_id");
                 String directorName = rs.getString("director_name");
                 if (directorId != null) {
                     Director director = new Director(directorId, directorName);
