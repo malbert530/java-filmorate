@@ -174,16 +174,4 @@ public class FilmService {
         }
         return dtoList;
     }
-
-    public List<FilmDto> getCommonFilms(Long userId, Long friendId) {
-
-        userStorage.getUserById(userId);
-        userStorage.getUserById(friendId);
-
-        List<Film> commonFilms = filmStorage.getCommonFilms(userId, friendId);
-        return commonFilms.stream()
-                .map(FilmMapper::convertToDto)
-                .collect(Collectors.toList());
-    }
-
 }

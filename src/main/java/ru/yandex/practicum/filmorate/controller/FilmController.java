@@ -93,12 +93,4 @@ public class FilmController {
         log.info("Получен HTTP-запрос на получение списка фильмов по id режиссера {}", id);
         return filmService.getFilmsByDirectorId(id, sortBy);
     }
-
-    @GetMapping("/common")
-    public List<FilmDto> getCommonFilms(@RequestParam Long userId, @RequestParam Long friendId) {
-        log.info("Получен HTTP-запрос на получение общих фильмов пользователей {} и {} и сортировкой по их популярности.", userId, friendId);
-        List<FilmDto> commonFilms = filmService.getCommonFilms(userId, friendId);
-        log.info("Успешно обработан HTTP-запрос на получение общих фильмов пользователей {} и {} и сортировкой по их популярности.", userId, friendId);
-        return commonFilms;
-    }
 }

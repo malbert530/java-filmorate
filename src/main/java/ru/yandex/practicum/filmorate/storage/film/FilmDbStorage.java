@@ -171,7 +171,6 @@ public class FilmDbStorage implements FilmStorage {
             List<Long> directorIds = newFilm.getDirectors().stream().map(Director::getId).toList();
             batchInsertDirector(newFilm.getId(), directorIds);
         }
-
         return newFilm;
     }
 
