@@ -89,7 +89,6 @@ public class FilmDbStorage implements FilmStorage {
             "ORDER BY l.like_count DESC) likes ON likes.id = f.id " +
             "JOIN (SELECT fd.*, d.name director_name FROM film_director fd " +
             "JOIN directors d ON fd.director_id = d.id WHERE d.id = ?) directors ON directors.film_id = f.id";
-            "ORDER BY l.like_count DESC LIMIT ?) likes ON likes.id = f.id";
 
     private static final String FIND_COMMON = "SELECT f.*, r.name AS rating_name, g.id AS genre_id, g.name AS genre_name " +
             "FROM films f " +
@@ -171,6 +170,7 @@ public class FilmDbStorage implements FilmStorage {
             List<Long> directorIds = newFilm.getDirectors().stream().map(Director::getId).toList();
             batchInsertDirector(newFilm.getId(), directorIds);
         }
+
         return newFilm;
     }
 
