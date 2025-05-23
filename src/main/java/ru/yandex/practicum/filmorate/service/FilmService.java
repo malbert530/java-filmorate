@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -135,6 +136,18 @@ public class FilmService {
         Rating ratingWithName = ratingStorage.getRatingById(mpa.getId());
         mpa.setName(ratingWithName.getName());
     }
+
+    public List<FilmDto> getCommonFilms(Long userId, Long friendId) {
+
+        userStorage.getUserById(userId);
+        userStorage.getUserById(friendId);
+
+        List<Film> commonFilms = filmStorage.getCommonFilms(userId, friendId);
+        return commonFilms.stream()
+                .map(FilmMapper::convertToDto)
+                .collect(Collectors.toList());
+    }
+
 
     public List<FilmDto> getFilmsByDirectorId(Long id, String sortBy) {
         directorStorage.getDirectorById(id);

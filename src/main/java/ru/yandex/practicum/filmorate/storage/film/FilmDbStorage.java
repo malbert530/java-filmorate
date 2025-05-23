@@ -16,7 +16,8 @@ import ru.yandex.practicum.filmorate.storage.film.mapper.FilmExtractor;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.*;
+import java.util.List;
+import java.util.TreeSet;
 
 @Slf4j
 @Component
@@ -48,8 +49,8 @@ public class FilmDbStorage implements FilmStorage {
     private static final String UPDATE_QUERY = "UPDATE films " +
             "SET name = ?, description = ?, release_date = ?, duration = ?, rating_id = ? WHERE id = ?";
     private static final String DELETE_FILM_GENRES = "DELETE FROM film_genre WHERE film_id = ?";
+    private static final String INSERT_LIKE = "MERGE INTO film_user_like KEY(film_id, user_id) VALUES (?, ?)";
     private static final String DELETE_FILM_DIRECTORS = "DELETE FROM film_director WHERE film_id = ?";
-    private static final String INSERT_LIKE = "INSERT INTO film_user_like (film_id, user_id) VALUES (?, ?)";
     private static final String DELETE_LIKE = "DELETE FROM film_user_like WHERE film_id = ? AND user_id = ?";
 
     private static final String FIND_MOST_POPULAR = "SELECT f.*, r.name rating_name, g.genre_name, g.genre_id, " +
@@ -87,6 +88,21 @@ public class FilmDbStorage implements FilmStorage {
             "ORDER BY l.like_count DESC) likes ON likes.id = f.id " +
             "JOIN (SELECT fd.*, d.name director_name FROM film_director fd " +
             "JOIN directors d ON fd.director_id = d.id WHERE d.id = ?) directors ON directors.film_id = f.id";
+            "ORDER BY l.like_count DESC LIMIT ?) likes ON likes.id = f.id";
+
+    private static final String FIND_COMMON = "SELECT f.*, r.name AS rating_name, g.id AS genre_id, g.name AS genre_name " +
+            "FROM films f " +
+            "JOIN rating r ON f.rating_id = r.id " +
+            "LEFT JOIN film_genre fg ON f.id = fg.film_id " +
+            "LEFT JOIN genres g ON fg.genre_id = g.id " +
+            "WHERE f.id IN (" +
+            "  SELECT ful1.film_id FROM film_user_like ful1 " +
+            "  WHERE ful1.user_id = ? " +
+            "  INTERSECT " +
+            "  SELECT ful2.film_id FROM film_user_like ful2 " +
+            "  WHERE ful2.user_id = ?" +
+            ") " +
+            "ORDER BY (SELECT COUNT(*) FROM film_user_like WHERE film_id = f.id) DESC";
 
     private final JdbcTemplate jdbc;
     private final FilmExtractor filmExtractor;
@@ -182,6 +198,11 @@ public class FilmDbStorage implements FilmStorage {
             throw new FilmNotFoundException(errorMessage);
         }
         return list.getFirst();
+    }
+
+    @Override
+    public List<Film> getCommonFilms(Long userId, Long friendId) {
+        return jdbc.query(FIND_COMMON, filmExtractor, userId, friendId);
     }
 
     @Override
