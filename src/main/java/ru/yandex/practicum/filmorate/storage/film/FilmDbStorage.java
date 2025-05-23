@@ -37,7 +37,7 @@ public class FilmDbStorage implements FilmStorage {
     private static final String UPDATE_QUERY = "UPDATE films " +
             "SET name = ?, description = ?, release_date = ?, duration = ?, rating_id = ? WHERE id = ?";
     private static final String DELETE_FILM_GENRES = "DELETE FROM film_genre WHERE film_id = ?";
-    private static final String INSERT_LIKE = "INSERT INTO film_user_like (film_id, user_id) VALUES (?, ?)";
+    private static final String INSERT_LIKE = "MERGE INTO film_user_like KEY(film_id, user_id) VALUES (?, ?)";
     private static final String DELETE_LIKE = "DELETE FROM film_user_like WHERE film_id = ? AND user_id = ?";
 
     private static final String FIND_MOST_POPULAR = "SELECT f.*, r.name rating_name, g.genre_name, g.genre_id, likes.like_count " +
@@ -48,6 +48,7 @@ public class FilmDbStorage implements FilmStorage {
             "LEFT JOIN (SELECT film_id, COUNT(user_id) AS like_count " +
             "FROM film_user_like GROUP BY film_id) AS l ON f.id = l.film_id " +
             "ORDER BY l.like_count DESC LIMIT ?) likes ON likes.id = f.id";
+
 
     private final JdbcTemplate jdbc;
     private final FilmExtractor filmExtractor;
@@ -139,5 +140,10 @@ public class FilmDbStorage implements FilmStorage {
             throw new FilmNotFoundException(errorMessage);
         }
         return list.getFirst();
+    }
+
+    @Override
+    public List<Film> getCommonFilms(Long userId, Long friendId) {
+        return jdbc.query(FIND_COMMON, filmExtractor, userId, friendId);
     }
 }
