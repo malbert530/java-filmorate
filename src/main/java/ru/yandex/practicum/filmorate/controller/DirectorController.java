@@ -23,7 +23,7 @@ public class DirectorController {
     }
 
     @GetMapping("/{id}")
-    public Director getDirectorById(@PathVariable Integer id) {
+    public Director getDirectorById(@PathVariable Long id) {
         log.info("Получен HTTP-запрос на получение режиссера по id {}", id);
         Director directorById = directorService.getDirectorById(id);
         log.info("Успешно обработан HTTP-запрос на получение режиссера по id: {}", directorById);
@@ -47,7 +47,7 @@ public class DirectorController {
     }
 
     @DeleteMapping("/{id}")
-    public Director deleteDirectorById(@PathVariable Integer id) {
+    public Director deleteDirectorById(@PathVariable Long id) {
         log.info("Получен HTTP-запрос на удаление режиссера с id {}", id);
         Director director = directorService.deleteDirectorById(id);
         return director;

@@ -143,7 +143,7 @@ public class FilmService {
         mpa.setName(ratingWithName.getName());
     }
 
-    public Collection<FilmDto> getFilmsByDirectorId(Integer id, String sortBy) {
+    public List<FilmDto> getFilmsByDirectorId(Long id, String sortBy) {
         directorStorage.getDirectorById(id);
         List<FilmDto> dtoList = new ArrayList<>();
         Collection<Film> films;
