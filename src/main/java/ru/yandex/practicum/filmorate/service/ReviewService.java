@@ -23,13 +23,15 @@ public class ReviewService {
     }
 
     public Review update(Review review) {
-        Review existing = getById(review.getReviewId()); // Проверяем и получаем текущий отзыв
-        review.setUseful(existing.getUseful());          // Переносим текущее значение полезности
-        return reviewStorage.update(review);             // Обновляем отзыв (без смены useful)
+        Review existing = getById(review.getReviewId());
+        review.setUserId(existing.getUserId());
+        review.setFilmId(existing.getFilmId());
+        review.setUseful(existing.getUseful());
+        return reviewStorage.update(review);
     }
 
     public void delete(Long id) {
-        getById(id); // Проверка отзыва
+        getById(id);
         reviewStorage.delete(id);
     }
 
@@ -39,32 +41,32 @@ public class ReviewService {
 
     public List<Review> getAll(Long filmId, int count) {
         if (filmId != null) {
-            filmStorage.getFilmById(filmId); // Проверка фильма
+            filmStorage.getFilmById(filmId);
         }
         return reviewStorage.getAll(filmId, count);
     }
 
     public void addLike(Long reviewId, Long userId) {
-        userStorage.getUserById(userId);      // Проверка пользователя
-        getById(reviewId);                    // Проверка отзыва
+        userStorage.getUserById(userId);
+        getById(reviewId);
         reviewStorage.addLike(reviewId, userId);
     }
 
     public void addDislike(Long reviewId, Long userId) {
-        userStorage.getUserById(userId);      // Проверка пользователя
-        getById(reviewId);                    // Проверка отзыва
+        userStorage.getUserById(userId);
+        getById(reviewId);
         reviewStorage.addDislike(reviewId, userId);
     }
 
     public void removeLike(Long reviewId, Long userId) {
-        userStorage.getUserById(userId);      // Проверка пользователя
-        getById(reviewId);                    // Проверка отзыва
+        userStorage.getUserById(userId);
+        getById(reviewId);
         reviewStorage.removeLike(reviewId, userId);
     }
 
     public void removeDislike(Long reviewId, Long userId) {
-        userStorage.getUserById(userId);      // Проверка пользователя
-        getById(reviewId);                    // Проверка отзыва
+        userStorage.getUserById(userId);
+        getById(reviewId);
         reviewStorage.removeDislike(reviewId, userId);
     }
 
