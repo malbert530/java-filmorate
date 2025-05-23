@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -11,7 +12,6 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 
 @Slf4j
 @RestController
@@ -35,11 +35,8 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public Collection<FilmDto> getPopularFilms(@RequestParam Integer count) {
+    public Collection<FilmDto> getPopularFilms(@RequestParam(defaultValue = "10") @Min(0) Integer count) {
         log.info("Получен HTTP-запрос на получение {} самых популярных фильмов", count);
-        if (Objects.isNull(count)) {
-            count = 10;
-        }
         Collection<FilmDto> popularFilms = filmService.getPopularFilms(count);
         log.info("Успешно обработан HTTP-запрос на получение {} самых популярных фильмов", count);
         return popularFilms;
@@ -81,5 +78,11 @@ public class FilmController {
         List<FilmDto> commonFilms = filmService.getCommonFilms(userId, friendId);
         log.info("Успешно обработан HTTP-запрос на получение общих фильмов пользователей {} и {} и сортировкой по их популярности.", userId, friendId);
         return commonFilms;
+    }
+
+    @GetMapping("/director/{id}")
+    public List<FilmDto> getFilmsByDirectorId(@PathVariable Long id, @RequestParam String sortBy) {
+        log.info("Получен HTTP-запрос на получение списка фильмов по id режиссера {}", id);
+        return filmService.getFilmsByDirectorId(id, sortBy);
     }
 }
