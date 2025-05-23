@@ -80,6 +80,12 @@ public class FilmController {
         log.info("Успешно обработан HTTP-запрос на удаление лайка для фильма с id {} от пользователя с id {}", id, userId);
     }
 
+    @GetMapping("/director/{id}")
+    public Collection<FilmDto> getFilmsByDirectorId(@PathVariable Integer id, @RequestParam String sortBy) {
+        log.info("Получен HTTP-запрос на получение списка фильмов по id режиссера {}", id);
+        return filmService.getFilmsByDirectorId(id, sortBy);
+    }
+
     @GetMapping("/common")
     public List<FilmDto> getCommonFilms(@RequestParam Long userId, @RequestParam Long friendId) {
         log.info("Получен HTTP-запрос на получение общих фильмов пользователей {} и {} и сортировкой по их популярности.", userId, friendId);
