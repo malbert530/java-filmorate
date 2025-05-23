@@ -49,6 +49,20 @@ public class FilmDbStorage implements FilmStorage {
             "FROM film_user_like GROUP BY film_id) AS l ON f.id = l.film_id " +
             "ORDER BY l.like_count DESC LIMIT ?) likes ON likes.id = f.id";
 
+    private static final String FIND_COMMON = "SELECT f.*, r.name AS rating_name, g.id AS genre_id, g.name AS genre_name " +
+            "FROM films f " +
+            "JOIN rating r ON f.rating_id = r.id " +
+            "LEFT JOIN film_genre fg ON f.id = fg.film_id " +
+            "LEFT JOIN genres g ON fg.genre_id = g.id " +
+            "WHERE f.id IN (" +
+            "  SELECT ful1.film_id FROM film_user_like ful1 " +
+            "  WHERE ful1.user_id = ? " +
+            "  INTERSECT " +
+            "  SELECT ful2.film_id FROM film_user_like ful2 " +
+            "  WHERE ful2.user_id = ?" +
+            ") " +
+            "ORDER BY (SELECT COUNT(*) FROM film_user_like WHERE film_id = f.id) DESC";
+
 
     private final JdbcTemplate jdbc;
     private final FilmExtractor filmExtractor;
