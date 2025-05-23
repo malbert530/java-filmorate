@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
@@ -33,7 +34,7 @@ public class UserDbStorage implements UserStorage {
     private static final String FIND_USER_FRIENDS = "SELECT * FROM users " +
             "WHERE id IN(SELECT friend_id FROM friends WHERE user_id = ?)";
     private static final String DELETE_FRIEND_QUERY = "DELETE FROM friends WHERE user_id = ? AND friend_id = ?";
-
+    private static final String GET_LIKES = "SELECT user_id, film_id FROM film_user_like";
 
     private final JdbcTemplate jdbc;
     private final UserRowMapper mapper;
@@ -151,5 +152,18 @@ public class UserDbStorage implements UserStorage {
             }
         }
         return commonFriends;
+    }
+
+    @Override
+    public Map<Long, Set<Long>> getAllLikesFromDb() {
+        return jdbc.query(GET_LIKES, (ResultSetExtractor<Map<Long, Set<Long>>>) rs -> {
+            Map<Long, Set<Long>> userLikes = new HashMap<>();
+            while (rs.next()) {
+                Long userId = rs.getLong("user_id");
+                Long filmId = rs.getLong("film_id");
+                userLikes.computeIfAbsent(userId, k -> new HashSet<>()).add(filmId);
+            }
+            return userLikes;
+        });
     }
 }

@@ -13,7 +13,8 @@ import ru.yandex.practicum.filmorate.storage.film.mapper.FilmExtractor;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.util.*;
+import java.util.List;
+import java.util.TreeSet;
 
 @Slf4j
 @Component
@@ -47,7 +48,6 @@ public class FilmDbStorage implements FilmStorage {
             "LEFT JOIN (SELECT film_id, COUNT(user_id) AS like_count " +
             "FROM film_user_like GROUP BY film_id) AS l ON f.id = l.film_id " +
             "ORDER BY l.like_count DESC LIMIT ?) likes ON likes.id = f.id";
-
 
     private final JdbcTemplate jdbc;
     private final FilmExtractor filmExtractor;
