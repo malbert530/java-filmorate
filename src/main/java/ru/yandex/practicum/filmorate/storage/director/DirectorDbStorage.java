@@ -7,7 +7,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.DirectorNotFoundException;
-import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.storage.director.mapper.DirectorRowMapper;
 
@@ -43,7 +42,7 @@ public class DirectorDbStorage {
         } catch (EmptyResultDataAccessException e) {
             String errorMessage = String.format("Режиссер с id %d не найден", id);
             log.warn(errorMessage);
-            throw new UserNotFoundException(errorMessage);
+            throw new DirectorNotFoundException(errorMessage);
         }
     }
 
