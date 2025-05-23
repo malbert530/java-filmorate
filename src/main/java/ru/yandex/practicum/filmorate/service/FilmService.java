@@ -9,9 +9,11 @@ import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Rating;
+import ru.yandex.practicum.filmorate.storage.director.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.rating.RatingDbStorage;
@@ -32,6 +34,7 @@ public class FilmService {
     private final UserStorage userStorage;
     private final GenreDbStorage genreStorage;
     private final RatingDbStorage ratingStorage;
+    private final DirectorDbStorage directorStorage;
 
     public Collection<FilmDto> findAll() {
         List<FilmDto> dtoList = new ArrayList<>();
@@ -50,6 +53,9 @@ public class FilmService {
         if (request.hasGenre()) {
             validateGenreIdAndUpdateName(request.getGenres());
         }
+        if (request.hasDirector()) {
+            validateDirectorIdAndUpdateName(request.getDirectors());
+        }
         Film film = FilmMapper.mapToFilm(request);
 
         Film createdFilm = filmStorage.create(film);
@@ -64,6 +70,9 @@ public class FilmService {
         }
         if (newFilm.hasGenre()) {
             validateGenreIdAndUpdateName(newFilm.getGenres());
+        }
+        if (newFilm.hasDirector()) {
+            validateDirectorIdAndUpdateName(newFilm.getDirectors());
         }
         if (newFilm.hasRating()) {
             validateRatingIdAndUpdateName(newFilm.getMpa());
@@ -113,11 +122,38 @@ public class FilmService {
             Genre genreWithName = genreStorage.getGenreById(genre.getId());
             genre.setName(genreWithName.getName());
         }
+    }
 
+    private void validateDirectorIdAndUpdateName(TreeSet<Director> directors) {
+        for (Director director : directors) {
+            Director directorWithName = directorStorage.getDirectorById(director.getId());
+            director.setName(directorWithName.getName());
+        }
     }
 
     private void validateRatingIdAndUpdateName(Rating mpa) {
         Rating ratingWithName = ratingStorage.getRatingById(mpa.getId());
         mpa.setName(ratingWithName.getName());
+    }
+
+    public Collection<FilmDto> getFilmsByDirectorId(Integer id, String sortBy) {
+        directorStorage.getDirectorById(id);
+        List<FilmDto> dtoList = new ArrayList<>();
+        Collection<Film> films;
+        if (sortBy.equalsIgnoreCase("year")) {
+            films = filmStorage.getFilmByDirectorIdSortedByYear(id);
+        } else if (sortBy.equalsIgnoreCase("likes")) {
+            films = filmStorage.getFilmByDirectorIdSortedByLikes(id);
+        } else {
+            String errorMessage = String.format("Неизвестный параметр запроса - %s", sortBy);
+            log.warn(errorMessage);
+            throw new ValidationException(errorMessage);
+        }
+        if (films != null) {
+            dtoList = films.stream()
+                    .map(FilmMapper::convertToDto)
+                    .toList();
+        }
+        return dtoList;
     }
 }

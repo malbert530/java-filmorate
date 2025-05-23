@@ -58,7 +58,6 @@ public class UserController {
     @PutMapping
     public User update(@RequestBody @Valid UpdateUserRequest request) {
         log.info("Получен HTTP-запрос на обновление пользователя: {}", request);
-        ;
         User updatedUser = userService.update(request);
         log.info("Успешно обработан HTTP-запрос на обновление пользователя: {}", updatedUser);
         return updatedUser;
