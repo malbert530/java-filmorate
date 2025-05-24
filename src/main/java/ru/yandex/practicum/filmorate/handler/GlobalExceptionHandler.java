@@ -52,4 +52,10 @@ public class GlobalExceptionHandler {
     public ApiError handleFilmNotFound(RatingNotFoundException e) {
         return ApiError.builder().description(e.getMessage()).errorCode(HttpStatus.NOT_FOUND.value()).build();
     }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ApiError handleReviewNotFound(ReviewNotFoundException e) {
+        return ApiError.builder().description(e.getMessage()).errorCode(HttpStatus.NOT_FOUND.value()).build();
+    }
 }
