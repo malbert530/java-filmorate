@@ -58,10 +58,17 @@ public class UserController {
     @PutMapping
     public User update(@RequestBody @Valid UpdateUserRequest request) {
         log.info("Получен HTTP-запрос на обновление пользователя: {}", request);
-        ;
         User updatedUser = userService.update(request);
         log.info("Успешно обработан HTTP-запрос на обновление пользователя: {}", updatedUser);
         return updatedUser;
+    }
+
+    @DeleteMapping("/{id}")
+    public User delete(@PathVariable Long id) {
+        log.info("Получен HTTP-запрос на удаление пользователя с id {}", id);
+        User deletedUser = userService.deleteById(id);
+        log.info("Успешно обработан HTTP-запрос на удаление пользователя: {}", deletedUser);
+        return deletedUser;
     }
 
     @PutMapping("/{id}/friends/{friendId}")

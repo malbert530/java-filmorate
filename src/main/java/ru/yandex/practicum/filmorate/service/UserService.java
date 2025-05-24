@@ -41,6 +41,12 @@ public class UserService {
         return userStorage.update(updatedUser);
     }
 
+    public User deleteById(Long id) {
+        User deletedUser = userStorage.getUserById(id);
+        userStorage.deleteById(id);
+        return deletedUser;
+    }
+
     public User getUserById(Long id) {
         return userStorage.getUserById(id);
     }
