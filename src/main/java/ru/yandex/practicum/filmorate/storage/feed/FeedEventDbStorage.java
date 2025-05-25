@@ -45,7 +45,7 @@ public class FeedEventDbStorage implements FeedEventStorage {
             ps.setLong(2, feedEvent.getUserId());
             ps.setInt(3, feedEvent.getEventType().getId());
             ps.setInt(4, feedEvent.getOperation().getId());
-            ps.setLong(5,feedEvent.getEntityId());
+            ps.setLong(5, feedEvent.getEntityId());
             return ps;
         }, keyHolder);
 

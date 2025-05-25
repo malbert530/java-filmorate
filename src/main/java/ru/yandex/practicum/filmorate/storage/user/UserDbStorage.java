@@ -15,7 +15,10 @@ import ru.yandex.practicum.filmorate.storage.user.mapper.UserRowMapper;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 
 @Slf4j
 @Component

@@ -78,15 +78,13 @@ public class UserController {
     @PutMapping("/{id}/friends/{friendId}")
     public User addFriend(@PathVariable Long id, @PathVariable Long friendId) {
         log.info("Получен HTTP-запрос на добавление в друзья пользователей с id {} и id {}", id, friendId);
-        User user = userService.addFriend(id, friendId);
-        return user;
+        return userService.addFriend(id, friendId);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
     public User deleteFriend(@PathVariable Long id, @PathVariable Long friendId) {
         log.info("Получен HTTP-запрос на удаление из друзей пользователей с id {} и id {}", id, friendId);
-        User user = userService.deleteFriend(id, friendId);
-        return user;
+        return userService.deleteFriend(id, friendId);
     }
 
     @GetMapping("/{id}/recommendations")

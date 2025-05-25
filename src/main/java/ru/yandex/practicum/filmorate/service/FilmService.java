@@ -35,8 +35,6 @@ public class FilmService {
     private final RatingDbStorage ratingStorage;
     private final DirectorDbStorage directorStorage;
     private final FeedEventStorage feedStorage;
-    private final OperationDbStorage operationStorage;
-    private final EventTypeDbStorage eventTypeStorage;
 
     private final Map<String, Integer> operations;
     private final Map<String, Integer> eventTypes;
@@ -49,8 +47,6 @@ public class FilmService {
         this.genreStorage = genreStorage;
         this.ratingStorage = ratingStorage;
         this.feedStorage = feedStorage;
-        this.operationStorage = operationStorage;
-        this.eventTypeStorage = eventTypeStorage;
         operations = operationStorage.getMap();
         eventTypes = eventTypeStorage.getMap();
     }

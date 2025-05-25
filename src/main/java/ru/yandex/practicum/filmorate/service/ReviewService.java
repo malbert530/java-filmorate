@@ -25,8 +25,6 @@ public class ReviewService {
     private final FilmStorage filmStorage;
 
     private final FeedEventStorage feedStorage;
-    private final OperationDbStorage operationStorage;
-    private final EventTypeDbStorage eventTypeStorage;
 
     private final Map<String, Integer> operations;
     private final Map<String, Integer> eventTypes;
@@ -36,8 +34,6 @@ public class ReviewService {
         this.userStorage = userStorage;
         this.filmStorage = filmStorage;
         this.feedStorage = feedStorage;
-        this.operationStorage = operationStorage;
-        this.eventTypeStorage = eventTypeStorage;
         operations = operationStorage.getMap();
         eventTypes = eventTypeStorage.getMap();
     }

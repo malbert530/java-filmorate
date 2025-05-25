@@ -31,8 +31,6 @@ public class UserService {
     private final UserStorage userStorage;
     private final FilmStorage filmStorage;
     private final FeedEventStorage feedStorage;
-    private final OperationDbStorage operationStorage;
-    private final EventTypeDbStorage eventTypeStorage;
 
     private final Map<String, Integer> operations;
     private final Map<String, Integer> eventTypes;
@@ -40,8 +38,6 @@ public class UserService {
     public UserService(UserStorage userStorage, FeedEventStorage feedStorage, OperationDbStorage operationStorage, EventTypeDbStorage eventTypeStorage) {
         this.userStorage = userStorage;
         this.feedStorage = feedStorage;
-        this.operationStorage = operationStorage;
-        this.eventTypeStorage = eventTypeStorage;
         operations = operationStorage.getMap();
         eventTypes = eventTypeStorage.getMap();
     }
