@@ -15,10 +15,7 @@ import ru.yandex.practicum.filmorate.storage.user.mapper.UserRowMapper;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -41,7 +38,6 @@ public class UserDbStorage implements UserStorage {
     private static final String GET_LIKES = "SELECT user_id, film_id FROM film_user_like";
 
     private static final String DELETE_USER_QUERY = "DELETE FROM users WHERE id = ?";
-
 
 
     private final JdbcTemplate jdbc;

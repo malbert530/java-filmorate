@@ -7,23 +7,17 @@ import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
-import ru.yandex.practicum.filmorate.model.EventType;
-import ru.yandex.practicum.filmorate.model.FeedEvent;
-import ru.yandex.practicum.filmorate.model.Operation;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.feed.EventTypeDbStorage;
 import ru.yandex.practicum.filmorate.storage.feed.FeedEventStorage;
 import ru.yandex.practicum.filmorate.storage.feed.OperationDbStorage;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Service
@@ -35,9 +29,11 @@ public class UserService {
     private final Map<String, Integer> operations;
     private final Map<String, Integer> eventTypes;
 
-    public UserService(UserStorage userStorage, FeedEventStorage feedStorage, OperationDbStorage operationStorage, EventTypeDbStorage eventTypeStorage) {
+    public UserService(UserStorage userStorage, FilmStorage filmStorage,
+                       FeedEventStorage feedStorage, OperationDbStorage operationStorage, EventTypeDbStorage eventTypeStorage) {
         this.userStorage = userStorage;
         this.feedStorage = feedStorage;
+        this.filmStorage = filmStorage;
         operations = operationStorage.getMap();
         eventTypes = eventTypeStorage.getMap();
     }
@@ -164,10 +160,10 @@ public class UserService {
 
         return mostSimilarUsers;
     }
+
     public List<FeedEvent> getFeed(Long userId) {
         return feedStorage.getFeed(userId);
     }
-}
 
     private Set<Long> getRecommendationsFromSimilarUsers(Long userId, Set<Long> similarUsers, Map<Long, Set<Long>> allLikes) {
         Set<Long> userLikes = allLikes.get(userId);

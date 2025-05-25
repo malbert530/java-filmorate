@@ -8,12 +8,11 @@ import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
-import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.*;
+import ru.yandex.practicum.filmorate.storage.director.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.storage.feed.EventTypeDbStorage;
 import ru.yandex.practicum.filmorate.storage.feed.FeedEventStorage;
 import ru.yandex.practicum.filmorate.storage.feed.OperationDbStorage;
-import ru.yandex.practicum.filmorate.storage.director.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.rating.RatingDbStorage;
@@ -41,12 +40,13 @@ public class FilmService {
 
     public FilmService(FilmStorage filmStorage, UserStorage userStorage,
                        GenreDbStorage genreStorage, RatingDbStorage ratingStorage, FeedEventStorage feedStorage,
-                       OperationDbStorage operationStorage, EventTypeDbStorage eventTypeStorage) {
+                       OperationDbStorage operationStorage, EventTypeDbStorage eventTypeStorage, DirectorDbStorage directorStorage) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
         this.genreStorage = genreStorage;
         this.ratingStorage = ratingStorage;
         this.feedStorage = feedStorage;
+        this.directorStorage = directorStorage;
         operations = operationStorage.getMap();
         eventTypes = eventTypeStorage.getMap();
     }
