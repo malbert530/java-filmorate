@@ -3,18 +3,22 @@ package ru.yandex.practicum.filmorate.storage.film;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.film.mapper.FilmExtractor;
 
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collection;
 import java.util.List;
+
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
@@ -23,34 +27,71 @@ import java.util.stream.Collectors;
 @Primary
 @RequiredArgsConstructor
 public class FilmDbStorage implements FilmStorage {
-    private static final String FIND_BY_ID_QUERY = "SELECT f.*, r.name rating_name, g.genre_name, g.genre_id " +
+    private static final String FIND_BY_ID_QUERY = "SELECT f.*, r.name rating_name, g.genre_name, g.genre_id, " +
+            "directors.director_id, directors.director_name " +
             "FROM films f " +
             "JOIN rating r ON f.rating_id = r.id " +
             "LEFT JOIN (SELECT fg.*, g.name genre_name FROM film_genre fg " +
-            "JOIN genres g ON fg.genre_id = g.id) g ON g.film_id = f.id WHERE f.id = ?";
-    private static final String FIND_ALL_QUERY = "SELECT f.*, r.name rating_name, g.genre_name, g.genre_id " +
+            "JOIN genres g ON fg.genre_id = g.id) g ON g.film_id = f.id " +
+            "LEFT JOIN (SELECT fd.*, d.name director_name FROM film_director fd " +
+            "JOIN directors d ON fd.director_id = d.id) directors ON directors.film_id = f.id " +
+            "WHERE f.id = ?";
+    private static final String FIND_ALL_QUERY = "SELECT f.*, r.name rating_name, g.genre_name, g.genre_id, " +
+            "directors.director_id, directors.director_name " +
             "FROM films f " +
             "JOIN rating r ON f.rating_id = r.id " +
             "LEFT JOIN (SELECT fg.*, g.name genre_name FROM film_genre fg " +
-            "JOIN genres g ON fg.genre_id = g.id) g ON g.film_id = f.id";
-    private static final String INSERT_QUERY = "INSERT INTO films(name, description, release_date, duration, rating_id)" +
+            "JOIN genres g ON fg.genre_id = g.id) g ON g.film_id = f.id " +
+            "LEFT JOIN (SELECT fd.*, d.name director_name FROM film_director fd " +
+            "JOIN directors d ON fd.director_id = d.id) directors ON directors.film_id = f.id";
+
+    private static final String INSERT_QUERY = "INSERT INTO films(name, description, release_date, duration, rating_id) " +
             "VALUES (?, ?, ?, ?, ?)";
     private static final String INSERT_FILM_GENRE = "INSERT INTO film_genre(film_id, genre_id) VALUES (?, ?)";
+    private static final String INSERT_FILM_DIRECTOR = "INSERT INTO film_director(film_id, director_id) VALUES (?, ?)";
     private static final String UPDATE_QUERY = "UPDATE films " +
             "SET name = ?, description = ?, release_date = ?, duration = ?, rating_id = ? WHERE id = ?";
     private static final String DELETE_FILM_QUERY = "DELETE FROM films WHERE id = ?";
     private static final String DELETE_FILM_GENRES = "DELETE FROM film_genre WHERE film_id = ?";
+    private static final String DELETE_FILM_DIRECTORS = "DELETE FROM film_director WHERE film_id = ?";
     private static final String INSERT_LIKE = "MERGE INTO film_user_like KEY(film_id, user_id) VALUES (?, ?)";
     private static final String DELETE_LIKE = "DELETE FROM film_user_like WHERE film_id = ? AND user_id = ?";
 
-    private static final String FIND_MOST_POPULAR = "SELECT f.*, r.name rating_name, g.genre_name, g.genre_id, likes.like_count " +
+    private static final String FIND_MOST_POPULAR = "SELECT f.*, r.name rating_name, g.genre_name, g.genre_id, " +
+            "directors.director_id, directors.director_name, likes.like_count " +
             "FROM films f JOIN rating r ON f.rating_id = r.id " +
             "LEFT JOIN (SELECT fg.*, g.name genre_name FROM film_genre fg " +
             "JOIN genres g ON fg.genre_id = g.id) g ON g.film_id = f.id " +
             "RIGHT JOIN (SELECT f.id, l.like_count FROM films f " +
             "LEFT JOIN (SELECT film_id, COUNT(user_id) AS like_count " +
             "FROM film_user_like GROUP BY film_id) AS l ON f.id = l.film_id " +
-            "ORDER BY l.like_count DESC LIMIT ?) likes ON likes.id = f.id";
+            "ORDER BY l.like_count DESC LIMIT ?) likes ON likes.id = f.id " +
+            "LEFT JOIN (SELECT fd.*, d.name director_name FROM film_director fd " +
+            "JOIN directors d ON fd.director_id = d.id) directors ON directors.film_id = f.id";
+    private static final String FIND_DIRECTOR_FILMS_SORTED_BY_YEAR = "SELECT f.*, r.name rating_name, g.genre_name, g.genre_id, " +
+            "directors.director_id, directors.director_name " +
+            "FROM films f " +
+            "JOIN rating r ON f.rating_id = r.id " +
+            "LEFT JOIN (SELECT fg.*, g.name genre_name FROM film_genre fg " +
+            "JOIN genres g ON fg.genre_id = g.id) g ON g.film_id = f.id " +
+            "RIGHT JOIN (SELECT fd.*, d.name director_name FROM film_director fd " +
+            "JOIN directors d ON fd.director_id = d.id WHERE d.id = ?) directors ON directors.film_id = f.id " +
+            "ORDER BY f.release_date";
+    private static final String FIND_DIRECTOR_FILMS_SORTED_BY_LIKES = "SELECT f.*, r.name rating_name, g.genre_name, " +
+            "g.genre_id, directors.director_id, directors.director_name " +
+            "FROM films f " +
+            "JOIN rating r ON f.rating_id = r.id " +
+            "LEFT JOIN (SELECT fg.*, g.name genre_name " +
+            "FROM film_genre fg " +
+            "JOIN genres g ON fg.genre_id = g.id) g ON g.film_id = f.id " +
+            "RIGHT JOIN (SELECT f.id, l.like_count " +
+            "FROM films f " +
+            "LEFT JOIN (SELECT film_id, COUNT(user_id) AS like_count " +
+            "FROM film_user_like " +
+            "GROUP BY film_id) AS l ON f.id = l.film_id " +
+            "ORDER BY l.like_count DESC) likes ON likes.id = f.id " +
+            "JOIN (SELECT fd.*, d.name director_name FROM film_director fd " +
+            "JOIN directors d ON fd.director_id = d.id WHERE d.id = ?) directors ON directors.film_id = f.id";
 
     private static final String FIND_COMMON = "SELECT f.*, r.name AS rating_name, g.id AS genre_id, g.name AS genre_name " +
             "FROM films f " +
@@ -90,13 +131,14 @@ public class FilmDbStorage implements FilmStorage {
 
         Long id = keyHolder.getKeyAs(Long.class);
 
-        TreeSet<Genre> genre = film.getGenre();
-        if (genre != null) {
-            for (Genre g : genre) {
-                int update = jdbc.update(INSERT_FILM_GENRE, id, g.getId());
-                String message = update == 1 ? "Жанры удалось обновить" : "Жанры не удалось обновить";
-                log.info(message);
-            }
+        if (film.getGenre() != null) {
+            List<Integer> genreIds = film.getGenre().stream().map(Genre::getId).toList();
+            batchInsertGenre(id, genreIds);
+        }
+
+        if (film.getDirectors() != null) {
+            List<Long> directorIds = film.getDirectors().stream().map(Director::getId).toList();
+            batchInsertDirector(id, directorIds);
         }
 
         if (id != null) {
@@ -120,15 +162,18 @@ public class FilmDbStorage implements FilmStorage {
             throw new RuntimeException("Не удалось обновить данные");
         }
 
-        TreeSet<Genre> genre = newFilm.getGenre();
         jdbc.update(DELETE_FILM_GENRES, newFilm.getId());
-        if (genre != null) {
-            for (Genre g : genre) {
-                int update = jdbc.update(INSERT_FILM_GENRE, newFilm.getId(), g.getId());
-                String message = update == 1 ? "Жанры удалось обновить" : "Жанры не удалось обновить";
-                log.info(message);
-            }
+        if (newFilm.getGenre() != null) {
+            List<Integer> genreIds = newFilm.getGenre().stream().map(Genre::getId).toList();
+            batchInsertGenre(newFilm.getId(), genreIds);
         }
+
+        jdbc.update(DELETE_FILM_DIRECTORS, newFilm.getId());
+        if (newFilm.getDirectors() != null) {
+            List<Long> directorIds = newFilm.getDirectors().stream().map(Director::getId).toList();
+            batchInsertDirector(newFilm.getId(), directorIds);
+        }
+
         return newFilm;
     }
 
@@ -172,6 +217,7 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
+ add-recommendations
     public List<Film> getFilmsByIds(Collection<Long> ids) {
 
         String idsString = ids.stream()
@@ -186,5 +232,43 @@ public class FilmDbStorage implements FilmStorage {
                 "WHERE f.id IN (" + idsString + ")";
 
         return jdbc.query(sql, filmExtractor);
+=======
+    public List<Film> getFilmByDirectorIdSortedByYear(Long id) {
+        return jdbc.query(FIND_DIRECTOR_FILMS_SORTED_BY_YEAR, filmExtractor, id);
+    }
+
+    @Override
+    public List<Film> getFilmByDirectorIdSortedByLikes(Long id) {
+        return jdbc.query(FIND_DIRECTOR_FILMS_SORTED_BY_LIKES, filmExtractor, id);
+    }
+
+    private void batchInsertDirector(Long filmId, List<Long> directorIds) {
+        jdbc.batchUpdate(INSERT_FILM_DIRECTOR, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                ps.setLong(1, filmId);
+                ps.setLong(2, directorIds.get(i));
+            }
+
+            @Override
+            public int getBatchSize() {
+                return directorIds.size();
+            }
+        });
+    }
+
+    private void batchInsertGenre(Long filmId, List<Integer> genreIds) {
+        jdbc.batchUpdate(INSERT_FILM_GENRE, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                ps.setLong(1, filmId);
+                ps.setInt(2, genreIds.get(i));
+            }
+
+            @Override
+            public int getBatchSize() {
+                return genreIds.size();
+            }
+        });
     }
 }
