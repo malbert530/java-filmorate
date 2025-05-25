@@ -177,6 +177,7 @@ public class FilmService {
 
     public List<FilmDto> getFilmsBySearch(String query, List<String> by) {
         List<FilmDto> dtoList = new ArrayList<>();
+        List<Film> films = new ArrayList<>();
         if (query.isBlank()) {
             String errorMessage = String.format("Пустой параметр запроса - %s", query);
             log.warn(errorMessage);
@@ -188,40 +189,29 @@ public class FilmService {
             throw new ValidationException(errorMessage);
         }
         if (by.size() > 2) {
-            String errorMessage = String.format("Параметров запроса больше, чем требуется - %s", by);
+            String errorMessage = String.format("Слишком много параметров в 'by' - %s", by);
             log.warn(errorMessage);
             throw new ValidationException(errorMessage);
         }
         if (by.size() == 2) {
-            if ((by.getFirst().equalsIgnoreCase("director") && by.getLast().equalsIgnoreCase("title")) ||
-                    (by.getFirst().equalsIgnoreCase("title") && by.getLast().equalsIgnoreCase("director"))) {
-                List<Film> filmsByDirectorAndTitle = filmStorage.getFilmsByDirectorAndTitle(query);
-                if (filmsByDirectorAndTitle != null) {
-                    dtoList = filmsByDirectorAndTitle.stream()
-                            .map(FilmMapper::convertToDto)
-                            .toList();
-                }
+            if (by.contains("title") && by.contains("director")) {
+                films = filmStorage.getFilmsByDirectorAndTitle(query);
             }
         } else {
-            if (by.getFirst().equalsIgnoreCase("director")) {
-                List<Film> filmsByDirector = filmStorage.getFilmsByDirector(query);
-                if (filmsByDirector != null) {
-                    dtoList = filmsByDirector.stream()
-                            .map(FilmMapper::convertToDto)
-                            .toList();
-                }
-            } else if (by.getFirst().equalsIgnoreCase("title")) {
-                List<Film> filmsByTitle = filmStorage.getFilmsByTitle(query);
-                if (filmsByTitle != null) {
-                    dtoList = filmsByTitle.stream()
-                            .map(FilmMapper::convertToDto)
-                            .toList();
-                }
+            if (by.contains("director")) {
+                films = filmStorage.getFilmsByDirector(query);
+            } else if (by.contains("title")) {
+                films = filmStorage.getFilmsByTitle(query);
             } else {
                 String errorMessage = String.format("Неизвестный параметр запроса - %s", by.getFirst());
                 log.warn(errorMessage);
                 throw new ValidationException(errorMessage);
             }
+        }
+        if (films != null) {
+            dtoList = films.stream()
+                    .map(FilmMapper::convertToDto)
+                    .toList();
         }
         return dtoList;
     }
