@@ -29,4 +29,10 @@ public interface FilmStorage {
     List<Film> getCommonFilms(Long userId, Long friendId);
 
     List<Film> getFilmsByIds(Collection<Long> ids);
+
+    List<Film> getFilmsByDirectorAndTitle(String query);
+
+    List<Film> getFilmsByDirector(String query);
+
+    List<Film> getFilmsByTitle(String query);
 }
