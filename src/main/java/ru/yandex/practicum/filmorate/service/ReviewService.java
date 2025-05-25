@@ -1,25 +1,59 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.FeedEvent;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.storage.feed.EventTypeDbStorage;
+import ru.yandex.practicum.filmorate.storage.feed.FeedEventStorage;
+import ru.yandex.practicum.filmorate.storage.feed.OperationDbStorage;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.review.ReviewStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
 public class ReviewService {
 
     private final ReviewStorage reviewStorage;
     private final UserStorage userStorage;
     private final FilmStorage filmStorage;
 
+    private final FeedEventStorage feedStorage;
+    private final OperationDbStorage operationStorage;
+    private final EventTypeDbStorage eventTypeStorage;
+
+    private final Map<String, Integer> operations;
+    private final Map<String, Integer> eventTypes;
+
+    public ReviewService(ReviewStorage reviewStorage, UserStorage userStorage, FilmStorage filmStorage, FeedEventStorage feedStorage, OperationDbStorage operationStorage, EventTypeDbStorage eventTypeStorage) {
+        this.reviewStorage = reviewStorage;
+        this.userStorage = userStorage;
+        this.filmStorage = filmStorage;
+        this.feedStorage = feedStorage;
+        this.operationStorage = operationStorage;
+        this.eventTypeStorage = eventTypeStorage;
+        operations = operationStorage.getMap();
+        eventTypes = eventTypeStorage.getMap();
+    }
+
     public Review create(Review review) {
         validateUserAndFilm(review.getUserId(), review.getFilmId());
-        return reviewStorage.create(review);
+        Review createdReview = reviewStorage.create(review);
+        FeedEvent feedEvent = FeedEvent.builder()
+                .timestamp(Timestamp.from(Instant.now()))
+                .userId(review.getUserId())
+                .eventType(new EventType(eventTypes.get("REVIEW"), null))
+                .operation(new Operation(operations.get("ADD"), null))
+                .build();
+        feedEvent = feedStorage.addToFeed(feedEvent);
+        feedStorage.insertReviewEntityToFeed(feedEvent.getId(), createdReview.getReviewId());
+        return createdReview;
     }
 
     public Review update(Review review) {
@@ -27,11 +61,28 @@ public class ReviewService {
         review.setUserId(existing.getUserId());
         review.setFilmId(existing.getFilmId());
         review.setUseful(existing.getUseful());
-        return reviewStorage.update(review);
+        Review updatedReview = reviewStorage.update(review);
+        FeedEvent feedEvent = FeedEvent.builder()
+                .timestamp(Timestamp.from(Instant.now()))
+                .userId(review.getUserId())
+                .eventType(new EventType(eventTypes.get("REVIEW"), null))
+                .operation(new Operation(operations.get("UPDATE"), null))
+                .build();
+        feedEvent = feedStorage.addToFeed(feedEvent);
+        feedStorage.insertReviewEntityToFeed(feedEvent.getId(), updatedReview.getReviewId());
+        return updatedReview;
     }
 
     public void delete(Long id) {
-        getById(id);
+        Review review = getById(id);
+        FeedEvent feedEvent = FeedEvent.builder()
+                .timestamp(Timestamp.from(Instant.now()))
+                .userId(review.getUserId())
+                .eventType(new EventType(eventTypes.get("REVIEW"), null))
+                .operation(new Operation(operations.get("REMOVE"), null))
+                .build();
+        feedEvent = feedStorage.addToFeed(feedEvent);
+        feedStorage.insertReviewEntityToFeed(feedEvent.getId(), review.getReviewId());
         reviewStorage.delete(id);
     }
 
@@ -48,8 +99,16 @@ public class ReviewService {
 
     public void addLike(Long reviewId, Long userId) {
         userStorage.getUserById(userId);
-        getById(reviewId);
+        Review review = getById(reviewId);
         reviewStorage.addLike(reviewId, userId);
+        FeedEvent feedEvent = FeedEvent.builder()
+                .timestamp(Timestamp.from(Instant.now()))
+                .userId(review.getUserId())
+                .eventType(new EventType(eventTypes.get("LIKE"), null))
+                .operation(new Operation(operations.get("ADD"), null))
+                .build();
+        feedEvent = feedStorage.addToFeed(feedEvent);
+        feedStorage.insertReviewEntityToFeed(feedEvent.getId(), review.getReviewId());
     }
 
     public void addDislike(Long reviewId, Long userId) {
@@ -60,8 +119,15 @@ public class ReviewService {
 
     public void removeLike(Long reviewId, Long userId) {
         userStorage.getUserById(userId);
-        getById(reviewId);
+        Review review = getById(reviewId);
         reviewStorage.removeLike(reviewId, userId);
+        FeedEvent feedEvent = FeedEvent.builder()
+                .timestamp(Timestamp.from(Instant.now()))
+                .userId(review.getUserId())
+                .eventType(new EventType(eventTypes.get("LIKE"), null))
+                .operation(new Operation(operations.get("REMOVE"), null))
+                .build();
+        feedEvent = feedStorage.addToFeed(feedEvent);
     }
 
     public void removeDislike(Long reviewId, Long userId) {

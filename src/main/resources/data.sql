@@ -12,3 +12,15 @@ INSERT INTO genres (id, name) VALUES
   (4, 'Триллер'),
   (5, 'Документальный'),
   (6, 'Боевик');
+
+
+INSERT INTO eventTypes (id, name) VALUES
+  (1, 'LIKE'),
+  (2, 'REVIEW'),
+  (3, 'FRIEND');
+
+
+INSERT INTO operations (id, name) VALUES
+  (1, 'REMOVE'),
+  (2, 'ADD'),
+  (3, 'UPDATE');
