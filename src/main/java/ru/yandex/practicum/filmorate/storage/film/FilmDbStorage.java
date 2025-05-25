@@ -104,6 +104,37 @@ public class FilmDbStorage implements FilmStorage {
             "  WHERE ful2.user_id = ?" +
             ") " +
             "ORDER BY (SELECT COUNT(*) FROM film_user_like WHERE film_id = f.id) DESC";
+    private static final String SEARCH_FILM_BY_TITLE = "SELECT f.*, r.name AS rating_name, g.id AS genre_id, " +
+            "g.name AS genre_name, fd.director_id, d.name AS director_name " +
+            "FROM (SELECT * FROM films WHERE name LIKE ?) AS f " +
+            "JOIN rating r ON f.rating_id = r.id " +
+            "LEFT JOIN film_genre fg ON f.id = fg.film_id " +
+            "LEFT JOIN genres g ON fg.genre_id = g.id " +
+            "LEFT JOIN film_director fd ON fd.film_id = f.id " +
+            "LEFT JOIN directors d ON d.id = fd.director_id " +
+            "ORDER BY (SELECT COUNT(*) FROM film_user_like WHERE film_id = f.id) DESC";
+    private static final String SEARCH_FILM_BY_DIRECTOR = "SELECT f.*, r.name AS rating_name, g.id AS genre_id, " +
+            "g.name AS genre_name, fd.director_id, d.name AS director_name " +
+            "FROM films f " +
+            "JOIN rating r ON f.rating_id = r.id " +
+            "LEFT JOIN film_genre fg ON f.id = fg.film_id " +
+            "LEFT JOIN genres g ON fg.genre_id = g.id " +
+            "LEFT JOIN film_director fd ON fd.film_id = f.id " +
+            "LEFT JOIN directors d ON d.id = fd.director_id " +
+            "WHERE fd.director_id IN (SELECT id FROM directors " +
+            "WHERE name LIKE ?) " +
+            "ORDER BY (SELECT COUNT(*) FROM film_user_like WHERE film_id = f.id) DESC";
+    private static final String SEARCH_FILM_BY_DIRECTOR_AND_TITLE = "SELECT f.*, r.name AS rating_name, g.id AS genre_id, " +
+            "g.name AS genre_name, fd.director_id, d.name AS director_name " +
+            "FROM films f " +
+            "JOIN rating r ON f.rating_id = r.id " +
+            "LEFT JOIN film_genre fg ON f.id = fg.film_id " +
+            "LEFT JOIN genres g ON fg.genre_id = g.id " +
+            "LEFT JOIN film_director fd ON fd.film_id = f.id " +
+            "LEFT JOIN directors d ON d.id = fd.director_id " +
+            "WHERE fd.director_id IN (SELECT id FROM directors " +
+            "WHERE name LIKE ?) OR f.name LIKE ? " +
+            "ORDER BY (SELECT COUNT(*) FROM film_user_like WHERE film_id = f.id) DESC";
 
     private final JdbcTemplate jdbc;
     private final FilmExtractor filmExtractor;
@@ -272,5 +303,23 @@ public class FilmDbStorage implements FilmStorage {
                 return genreIds.size();
             }
         });
+    }
+
+    @Override
+    public List<Film> getFilmsByDirector(String query) {
+        String s = "%" + query + "%";
+        return jdbc.query(SEARCH_FILM_BY_DIRECTOR, filmExtractor, s);
+    }
+
+    @Override
+    public List<Film> getFilmsByTitle(String query) {
+        String s = "%" + query + "%";
+        return jdbc.query(SEARCH_FILM_BY_TITLE, filmExtractor, s);
+    }
+
+    @Override
+    public List<Film> getFilmsByDirectorAndTitle(String query) {
+        String s = "%" + query + "%";
+        return jdbc.query(SEARCH_FILM_BY_DIRECTOR_AND_TITLE, filmExtractor, s, s);
     }
 }
