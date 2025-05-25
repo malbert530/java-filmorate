@@ -94,7 +94,8 @@ CREATE TABLE IF NOT EXISTS feed_events (
  timestamp timestamp,
  user_id bigint,
  eventType_id integer,
- operation_id integer
+ operation_id integer,
+ entity_id bigint
 );
 
 CREATE TABLE IF NOT EXISTS eventTypes (
@@ -106,25 +107,6 @@ CREATE TABLE IF NOT EXISTS operations (
   id integer PRIMARY KEY,
   name varchar UNIQUE
 );
-
-CREATE TABLE IF NOT EXISTS event_to_user (
-  event_id bigint,
-  user_id bigint,
-  UNIQUE(event_id, user_id)
-);
-
-CREATE TABLE IF NOT EXISTS event_to_film (
-  event_id bigint,
-  film_id bigint,
-  UNIQUE(event_id, film_id)
-);
-
-CREATE TABLE IF NOT EXISTS event_to_review (
-  event_id bigint,
-  review_id bigint,
-  UNIQUE(event_id, review_id)
-);
-
 
 ALTER TABLE friends ADD FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE;
 
@@ -154,12 +136,3 @@ ALTER TABLE film_director ADD FOREIGN KEY (director_id) REFERENCES directors (id
 ALTER TABLE feed_events ADD FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE;
 ALTER TABLE feed_events ADD FOREIGN KEY (eventType_id) REFERENCES eventTypes (id);
 ALTER TABLE feed_events ADD FOREIGN KEY (operation_id) REFERENCES operations (id);
-
-ALTER TABLE event_to_user ADD FOREIGN KEY (event_id) REFERENCES feed_events (id) ON DELETE CASCADE;
-ALTER TABLE event_to_user ADD FOREIGN KEY (user_id) REFERENCES users (id);
-
-ALTER TABLE event_to_film ADD FOREIGN KEY (event_id) REFERENCES feed_events (id) ON DELETE CASCADE;
-ALTER TABLE event_to_film ADD FOREIGN KEY (film_id) REFERENCES films (id);
-
-ALTER TABLE event_to_review ADD FOREIGN KEY (event_id) REFERENCES feed_events (id) ON DELETE CASCADE;
-ALTER TABLE event_to_review ADD FOREIGN KEY (review_id) REFERENCES reviews (review_id);

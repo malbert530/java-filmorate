@@ -116,9 +116,9 @@ public class FilmService {
                 .userId(userId)
                 .eventType(new EventType(eventTypes.get("LIKE"), null))
                 .operation(new Operation(operations.get("ADD"), null))
+                .entityId(id)
                 .build();
-        feedEvent = feedStorage.addToFeed(feedEvent);
-        feedStorage.insertFilmEntityToFeed(feedEvent.getId(), id);
+        feedStorage.addToFeed(feedEvent);
     }
 
     public void deleteLike(Long id, Long userId) {
@@ -129,9 +129,9 @@ public class FilmService {
                 .userId(userId)
                 .eventType(new EventType(eventTypes.get("LIKE"), null))
                 .operation(new Operation(operations.get("REMOVE"), null))
+                .entityId(id)
                 .build();
-        feedEvent = feedStorage.addToFeed(feedEvent);
-        feedStorage.insertFilmEntityToFeed(feedEvent.getId(), id);
+        feedStorage.addToFeed(feedEvent);
     }
 
     public List<FilmDto> getPopularFilms(Integer count) {

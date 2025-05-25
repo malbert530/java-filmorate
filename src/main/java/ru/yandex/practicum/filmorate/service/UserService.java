@@ -87,9 +87,9 @@ public class UserService {
                 .userId(id)
                 .eventType(new EventType(eventTypes.get("FRIEND"), null))
                 .operation(new Operation(operations.get("ADD"), null))
+                .entityId(friendId)
                 .build();
-        feedEvent = feedStorage.addToFeed(feedEvent);
-        feedStorage.insertUserEntityToFeed(feedEvent.getId(), friendId);
+        feedStorage.addToFeed(feedEvent);
         return user;
     }
 
@@ -100,9 +100,9 @@ public class UserService {
                 .userId(id)
                 .eventType(new EventType(eventTypes.get("FRIEND"), null))
                 .operation(new Operation(operations.get("REMOVE"), null))
+                .entityId(friendId)
                 .build();
-        feedEvent = feedStorage.addToFeed(feedEvent);
-        feedStorage.insertUserEntityToFeed(feedEvent.getId(), friendId);
+        feedStorage.addToFeed(feedEvent);
         return deletedFriendUser;
     }
 

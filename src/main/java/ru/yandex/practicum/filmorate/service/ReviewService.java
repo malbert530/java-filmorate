@@ -50,9 +50,9 @@ public class ReviewService {
                 .userId(review.getUserId())
                 .eventType(new EventType(eventTypes.get("REVIEW"), null))
                 .operation(new Operation(operations.get("ADD"), null))
+                .entityId(review.getReviewId())
                 .build();
-        feedEvent = feedStorage.addToFeed(feedEvent);
-        feedStorage.insertReviewEntityToFeed(feedEvent.getId(), createdReview.getReviewId());
+        feedStorage.addToFeed(feedEvent);
         return createdReview;
     }
 
@@ -67,9 +67,9 @@ public class ReviewService {
                 .userId(review.getUserId())
                 .eventType(new EventType(eventTypes.get("REVIEW"), null))
                 .operation(new Operation(operations.get("UPDATE"), null))
+                .entityId(review.getReviewId())
                 .build();
-        feedEvent = feedStorage.addToFeed(feedEvent);
-        feedStorage.insertReviewEntityToFeed(feedEvent.getId(), updatedReview.getReviewId());
+        feedStorage.addToFeed(feedEvent);
         return updatedReview;
     }
 
@@ -80,9 +80,9 @@ public class ReviewService {
                 .userId(review.getUserId())
                 .eventType(new EventType(eventTypes.get("REVIEW"), null))
                 .operation(new Operation(operations.get("REMOVE"), null))
+                .entityId(id)
                 .build();
-        feedEvent = feedStorage.addToFeed(feedEvent);
-        feedStorage.insertReviewEntityToFeed(feedEvent.getId(), review.getReviewId());
+        feedStorage.addToFeed(feedEvent);
         reviewStorage.delete(id);
     }
 
@@ -106,9 +106,9 @@ public class ReviewService {
                 .userId(review.getUserId())
                 .eventType(new EventType(eventTypes.get("LIKE"), null))
                 .operation(new Operation(operations.get("ADD"), null))
+                .entityId(reviewId)
                 .build();
-        feedEvent = feedStorage.addToFeed(feedEvent);
-        feedStorage.insertReviewEntityToFeed(feedEvent.getId(), review.getReviewId());
+        feedStorage.addToFeed(feedEvent);
     }
 
     public void addDislike(Long reviewId, Long userId) {
@@ -126,8 +126,9 @@ public class ReviewService {
                 .userId(review.getUserId())
                 .eventType(new EventType(eventTypes.get("LIKE"), null))
                 .operation(new Operation(operations.get("REMOVE"), null))
+                .entityId(reviewId)
                 .build();
-        feedEvent = feedStorage.addToFeed(feedEvent);
+        feedStorage.addToFeed(feedEvent);
     }
 
     public void removeDislike(Long reviewId, Long userId) {
