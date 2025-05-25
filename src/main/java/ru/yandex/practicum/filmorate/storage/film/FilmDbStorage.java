@@ -18,8 +18,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collection;
 import java.util.List;
-
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -217,7 +215,6 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
- add-recommendations
     public List<Film> getFilmsByIds(Collection<Long> ids) {
 
         String idsString = ids.stream()
@@ -232,7 +229,8 @@ public class FilmDbStorage implements FilmStorage {
                 "WHERE f.id IN (" + idsString + ")";
 
         return jdbc.query(sql, filmExtractor);
-=======
+    }
+
     public List<Film> getFilmByDirectorIdSortedByYear(Long id) {
         return jdbc.query(FIND_DIRECTOR_FILMS_SORTED_BY_YEAR, filmExtractor, id);
     }
