@@ -38,7 +38,7 @@ public class UserDbStorage implements UserStorage {
     private static final String GET_LIKES = "SELECT user_id, film_id FROM film_user_like";
 
     private static final String DELETE_USER_QUERY = "DELETE FROM users WHERE id = ?";
-    private static final String GET_LIKES = "SELECT user_id, film_id FROM film_user_like";
+
 
 
     private final JdbcTemplate jdbc;
