@@ -86,35 +86,19 @@ public class UserService {
             return Collections.emptyList();
         }
 
-        Set<Long> recommendations = getRecommendationsFromSimilarUsers(
-                userId,
-                similarUsers,
-                allLikes
-        );
+        Set<Long> recommendations = getRecommendationsFromSimilarUsers(userId, similarUsers, allLikes);
 
-        List<FilmDto> recomendations = new ArrayList<>();
-        for (Long filmId : recommendations) {
-            try {
-                Film film = filmStorage.getFilmById(filmId);
-                FilmDto filmDto = FilmMapper.convertToDto(film);
-                recomendations.add(filmDto);
-            } catch (FilmNotFoundException e) {
-                log.warn("Фильм с id {} не найден", filmId);
-            }
-        }
-        return recomendations;
+        List<Film> films = filmStorage.getFilmsByIds(recommendations);
+
+        return films.stream()
+                .map(FilmMapper::convertToDto)
+                .collect(Collectors.toList());
     }
 
 
     public Set<Long> findMostSimilarUsers(Long userId, Map<Long, Set<Long>> allLikes) {
-        if (userId == null || allLikes == null || allLikes.isEmpty()) {
-            return Collections.emptySet();
-        }
 
         Set<Long> userLikes = allLikes.get(userId);
-        if (userLikes == null || userLikes.isEmpty()) {
-            return Collections.emptySet();
-        }
 
         Set<Long> mostSimilarUsers = new HashSet<>();
         int maxCommonLikes = 0;

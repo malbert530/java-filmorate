@@ -13,8 +13,10 @@ import ru.yandex.practicum.filmorate.storage.film.mapper.FilmExtractor;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.util.Collection;
 import java.util.List;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -158,5 +160,22 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> getCommonFilms(Long userId, Long friendId) {
         return jdbc.query(FIND_COMMON, filmExtractor, userId, friendId);
+    }
+
+    @Override
+    public List<Film> getFilmsByIds(Collection<Long> ids) {
+
+        String idsString = ids.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
+
+        String sql = "SELECT f.*, r.name AS rating_name, g.id AS genre_id, g.name AS genre_name " +
+                "FROM films f " +
+                "JOIN rating r ON f.rating_id = r.id " +
+                "LEFT JOIN film_genre fg ON f.id = fg.film_id " +
+                "LEFT JOIN genres g ON fg.genre_id = g.id " +
+                "WHERE f.id IN (" + idsString + ")";
+
+        return jdbc.query(sql, filmExtractor);
     }
 }
