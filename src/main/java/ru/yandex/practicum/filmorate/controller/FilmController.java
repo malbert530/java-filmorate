@@ -87,4 +87,10 @@ public class FilmController {
         log.info("Успешно обработан HTTP-запрос на получение общих фильмов пользователей {} и {} и сортировкой по их популярности.", userId, friendId);
         return commonFilms;
     }
+
+    @GetMapping("/director/{id}")
+    public List<FilmDto> getFilmsByDirectorId(@PathVariable Long id, @RequestParam String sortBy) {
+        log.info("Получен HTTP-запрос на получение списка фильмов по id режиссера {}", id);
+        return filmService.getFilmsByDirectorId(id, sortBy);
+    }
 }
