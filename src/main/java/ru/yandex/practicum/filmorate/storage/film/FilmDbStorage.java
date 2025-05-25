@@ -221,11 +221,15 @@ public class FilmDbStorage implements FilmStorage {
                 .map(String::valueOf)
                 .collect(Collectors.joining(","));
 
-        String sql = "SELECT f.*, r.name AS rating_name, g.id AS genre_id, g.name AS genre_name " +
+        String sql = "SELECT f.*, r.name AS rating_name, " +
+                "g.id AS genre_id, g.name AS genre_name, " +
+                "d.id AS director_id, d.name AS director_name " +
                 "FROM films f " +
                 "JOIN rating r ON f.rating_id = r.id " +
                 "LEFT JOIN film_genre fg ON f.id = fg.film_id " +
                 "LEFT JOIN genres g ON fg.genre_id = g.id " +
+                "LEFT JOIN film_director fd ON f.id = fd.film_id " +
+                "LEFT JOIN directors d ON fd.director_id = d.id " +
                 "WHERE f.id IN (" + idsString + ")";
 
         return jdbc.query(sql, filmExtractor);
