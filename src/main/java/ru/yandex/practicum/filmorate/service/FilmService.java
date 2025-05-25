@@ -101,14 +101,15 @@ public class FilmService {
     }
 
     public List<FilmDto> getPopularFilms(Integer count) {
-        List<Film> films = filmStorage.getPopularFilms(count);
-        List<FilmDto> dtoList = new ArrayList<>();
-        if (films != null) {
-            dtoList = films.stream()
-                    .map(FilmMapper::convertToDto)
-                    .toList();
-        }
-        return dtoList;
+        // старый метод вызывает новый, передавая null-фильтры
+        return getPopularFilms(count, null, null);
+    }
+
+    public List<FilmDto> getPopularFilms(Integer count, Integer genreId, Integer year) {
+        List<Film> films = filmStorage.getPopularFilms(count, genreId, year);
+        return films.stream()
+                .map(FilmMapper::convertToDto)
+                .toList();
     }
 
     public FilmDto getFilmById(Long id) {

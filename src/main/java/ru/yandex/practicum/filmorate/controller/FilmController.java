@@ -43,10 +43,13 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public Collection<FilmDto> getPopularFilms(@RequestParam(defaultValue = "10") @Min(0) Integer count) {
-        log.info("Получен HTTP-запрос на получение {} самых популярных фильмов", count);
-        Collection<FilmDto> popularFilms = filmService.getPopularFilms(count);
-        log.info("Успешно обработан HTTP-запрос на получение {} самых популярных фильмов", count);
+    public Collection<FilmDto> getPopularFilms(
+            @RequestParam(defaultValue = "10") @Min(0) Integer count,
+            @RequestParam(required = false) Integer genreId,
+            @RequestParam(required = false) Integer year) {
+        log.info("Получен HTTP-запрос на получение популярных фильмов: count={}, genreId={}, year={}", count, genreId, year);
+        Collection<FilmDto> popularFilms = filmService.getPopularFilms(count, genreId, year);
+        log.info("Успешно обработан HTTP-запрос на получение популярных фильмов: count={}, genreId={}, year={}", count, genreId, year);
         return popularFilms;
     }
 

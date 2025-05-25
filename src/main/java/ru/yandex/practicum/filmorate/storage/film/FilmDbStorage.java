@@ -16,6 +16,7 @@ import ru.yandex.practicum.filmorate.storage.film.mapper.FilmExtractor;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -102,6 +103,29 @@ public class FilmDbStorage implements FilmStorage {
             "  WHERE ful2.user_id = ?" +
             ") " +
             "ORDER BY (SELECT COUNT(*) FROM film_user_like WHERE film_id = f.id) DESC";
+
+    private static final String FIND_POPULAR_WITH_FILTERS =
+            "SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id, " +
+                    "r.name AS rating_name, COALESCE(l.like_count, 0) AS like_count, " +
+                    "g.genre_id, g.genre_name, d.director_id, d.director_name " +
+                    "FROM films f " +
+                    "JOIN rating r ON f.rating_id = r.id " +
+                    "LEFT JOIN (" +
+                    "    SELECT film_id, COUNT(user_id) AS like_count " +
+                    "    FROM film_user_like " +
+                    "    GROUP BY film_id" +
+                    ") l ON f.id = l.film_id " +
+                    "LEFT JOIN (" +
+                    "    SELECT fg.film_id, g.id AS genre_id, g.name AS genre_name " +
+                    "    FROM film_genre fg " +
+                    "    JOIN genres g ON fg.genre_id = g.id" +
+                    ") g ON g.film_id = f.id " +
+                    "LEFT JOIN (" +
+                    "    SELECT fd.film_id, d.id AS director_id, d.name AS director_name " +
+                    "    FROM film_director fd " +
+                    "    JOIN directors d ON fd.director_id = d.id" +
+                    ") d ON d.film_id = f.id " +
+                    "WHERE 1=1 ";
 
     private final JdbcTemplate jdbc;
     private final FilmExtractor filmExtractor;
@@ -192,8 +216,25 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> getPopularFilms(Integer count) {
-        return jdbc.query(FIND_MOST_POPULAR, filmExtractor, count);
+    public List<Film> getPopularFilms(Integer count, Integer genreId, Integer year) {
+        StringBuilder sql = new StringBuilder(FIND_POPULAR_WITH_FILTERS);
+        List<Object> params = new ArrayList<>();
+
+        if (genreId != null) {
+            sql.append("AND f.id IN (SELECT film_id FROM film_genre WHERE genre_id = ?) ");
+            params.add(genreId);
+        }
+
+        if (year != null) {
+            sql.append("AND EXTRACT(YEAR FROM f.release_date) = ? ");
+            params.add(year);
+        }
+
+        sql.append("ORDER BY COALESCE(l.like_count, 0) DESC ");
+        sql.append("LIMIT ?");
+        params.add(count);
+
+        return jdbc.query(sql.toString(), filmExtractor, params.toArray());
     }
 
     @Override
