@@ -57,6 +57,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ApiError handleDirectorNotFound(DirectorNotFoundException e) {
         return ApiError.builder().error(e.getMessage()).errorCode(HttpStatus.NOT_FOUND.value()).build();
+    }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
