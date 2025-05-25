@@ -4,11 +4,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.Collection;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -83,5 +85,13 @@ public class UserController {
         log.info("Получен HTTP-запрос на удаление из друзей пользователей с id {} и id {}", id, friendId);
         User user = userService.deleteFriend(id, friendId);
         return user;
+    }
+
+    @GetMapping("/{id}/recommendations")
+    public List<FilmDto> getRecommendations(@PathVariable Long id) {
+        log.info("Получен HTTP-запрос на получение рекомендаций для пользователя с id {}", id);
+        List<FilmDto> recommendations = userService.getRecommendations(id);
+        log.info("Успешно обработан HTTP-запрос на получение рекомендаций для пользователя с id {}", id);
+        return recommendations;
     }
 }
