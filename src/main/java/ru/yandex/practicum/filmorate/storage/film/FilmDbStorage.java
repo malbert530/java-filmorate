@@ -54,17 +54,6 @@ public class FilmDbStorage implements FilmStorage {
     private static final String INSERT_LIKE = "MERGE INTO film_user_like KEY(film_id, user_id) VALUES (?, ?)";
     private static final String DELETE_LIKE = "DELETE FROM film_user_like WHERE film_id = ? AND user_id = ?";
 
-    private static final String FIND_MOST_POPULAR = "SELECT f.*, r.name rating_name, g.genre_name, g.genre_id, " +
-            "directors.director_id, directors.director_name, likes.like_count " +
-            "FROM films f JOIN rating r ON f.rating_id = r.id " +
-            "LEFT JOIN (SELECT fg.*, g.name genre_name FROM film_genre fg " +
-            "JOIN genres g ON fg.genre_id = g.id) g ON g.film_id = f.id " +
-            "RIGHT JOIN (SELECT f.id, l.like_count FROM films f " +
-            "LEFT JOIN (SELECT film_id, COUNT(user_id) AS like_count " +
-            "FROM film_user_like GROUP BY film_id) AS l ON f.id = l.film_id " +
-            "ORDER BY l.like_count DESC LIMIT ?) likes ON likes.id = f.id " +
-            "LEFT JOIN (SELECT fd.*, d.name director_name FROM film_director fd " +
-            "JOIN directors d ON fd.director_id = d.id) directors ON directors.film_id = f.id";
     private static final String FIND_DIRECTOR_FILMS_SORTED_BY_YEAR = "SELECT f.*, r.name rating_name, g.genre_name, g.genre_id, " +
             "directors.director_id, directors.director_name " +
             "FROM films f " +
@@ -74,6 +63,7 @@ public class FilmDbStorage implements FilmStorage {
             "RIGHT JOIN (SELECT fd.*, d.name director_name FROM film_director fd " +
             "JOIN directors d ON fd.director_id = d.id WHERE d.id = ?) directors ON directors.film_id = f.id " +
             "ORDER BY f.release_date";
+
     private static final String FIND_DIRECTOR_FILMS_SORTED_BY_LIKES = "SELECT f.*, r.name rating_name, g.genre_name, " +
             "g.genre_id, directors.director_id, directors.director_name " +
             "FROM films f " +
@@ -221,7 +211,7 @@ public class FilmDbStorage implements FilmStorage {
         List<Object> params = new ArrayList<>();
 
         if (genreId != null) {
-            sql.append("AND f.id IN (SELECT film_id FROM film_genre WHERE genre_id = ?) ");
+            sql.append("AND g.genre_id = ? ");
             params.add(genreId);
         }
 

@@ -100,12 +100,11 @@ public class FilmService {
         filmStorage.deleteLike(id, userId);
     }
 
-    public List<FilmDto> getPopularFilms(Integer count) {
-        // старый метод вызывает новый, передавая null-фильтры
-        return getPopularFilms(count, null, null);
-    }
-
     public List<FilmDto> getPopularFilms(Integer count, Integer genreId, Integer year) {
+        if (genreId != null) {
+            genreStorage.getGenreById(genreId);
+        }
+
         List<Film> films = filmStorage.getPopularFilms(count, genreId, year);
         return films.stream()
                 .map(FilmMapper::convertToDto)
