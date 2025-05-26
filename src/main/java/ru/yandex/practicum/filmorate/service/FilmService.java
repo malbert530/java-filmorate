@@ -100,15 +100,15 @@ public class FilmService {
         filmStorage.deleteLike(id, userId);
     }
 
-    public List<FilmDto> getPopularFilms(Integer count) {
-        List<Film> films = filmStorage.getPopularFilms(count);
-        List<FilmDto> dtoList = new ArrayList<>();
-        if (films != null) {
-            dtoList = films.stream()
-                    .map(FilmMapper::convertToDto)
-                    .toList();
+    public List<FilmDto> getPopularFilms(Integer count, Integer genreId, Integer year) {
+        if (genreId != null) {
+            genreStorage.getGenreById(genreId);
         }
-        return dtoList;
+
+        List<Film> films = filmStorage.getPopularFilms(count, genreId, year);
+        return films.stream()
+                .map(FilmMapper::convertToDto)
+                .toList();
     }
 
     public FilmDto getFilmById(Long id) {
