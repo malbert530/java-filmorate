@@ -41,14 +41,7 @@ public class ReviewService {
     public Review create(Review review) {
         validateUserAndFilm(review.getUserId(), review.getFilmId());
         Review createdReview = reviewStorage.create(review);
-        FeedEvent feedEvent = FeedEvent.builder()
-                .timestamp(Timestamp.from(Instant.now()))
-                .userId(review.getUserId())
-                .eventType(new EventType(eventTypes.get("REVIEW"), null))
-                .operation(new Operation(operations.get("ADD"), null))
-                .entityId(review.getReviewId())
-                .build();
-        feedStorage.addToFeed(feedEvent);
+        addReviewToFeed(createdReview, "REVIEW", "ADD");
         return createdReview;
     }
 
@@ -58,27 +51,13 @@ public class ReviewService {
         review.setFilmId(existing.getFilmId());
         review.setUseful(existing.getUseful());
         Review updatedReview = reviewStorage.update(review);
-        FeedEvent feedEvent = FeedEvent.builder()
-                .timestamp(Timestamp.from(Instant.now()))
-                .userId(review.getUserId())
-                .eventType(new EventType(eventTypes.get("REVIEW"), null))
-                .operation(new Operation(operations.get("UPDATE"), null))
-                .entityId(review.getReviewId())
-                .build();
-        feedStorage.addToFeed(feedEvent);
+        addReviewToFeed(review, "REVIEW", "UPDATE");
         return updatedReview;
     }
 
     public void delete(Long id) {
         Review review = getById(id);
-        FeedEvent feedEvent = FeedEvent.builder()
-                .timestamp(Timestamp.from(Instant.now()))
-                .userId(review.getUserId())
-                .eventType(new EventType(eventTypes.get("REVIEW"), null))
-                .operation(new Operation(operations.get("REMOVE"), null))
-                .entityId(id)
-                .build();
-        feedStorage.addToFeed(feedEvent);
+        addReviewToFeed(review, "REVIEW", "REMOVE");
         reviewStorage.delete(id);
     }
 
@@ -97,14 +76,7 @@ public class ReviewService {
         userStorage.getUserById(userId);
         Review review = getById(reviewId);
         reviewStorage.addLike(reviewId, userId);
-        FeedEvent feedEvent = FeedEvent.builder()
-                .timestamp(Timestamp.from(Instant.now()))
-                .userId(review.getUserId())
-                .eventType(new EventType(eventTypes.get("LIKE"), null))
-                .operation(new Operation(operations.get("ADD"), null))
-                .entityId(reviewId)
-                .build();
-        feedStorage.addToFeed(feedEvent);
+        addReviewToFeed(review, "LIKE", "ADD");
     }
 
     public void addDislike(Long reviewId, Long userId) {
@@ -117,14 +89,7 @@ public class ReviewService {
         userStorage.getUserById(userId);
         Review review = getById(reviewId);
         reviewStorage.removeLike(reviewId, userId);
-        FeedEvent feedEvent = FeedEvent.builder()
-                .timestamp(Timestamp.from(Instant.now()))
-                .userId(review.getUserId())
-                .eventType(new EventType(eventTypes.get("LIKE"), null))
-                .operation(new Operation(operations.get("REMOVE"), null))
-                .entityId(reviewId)
-                .build();
-        feedStorage.addToFeed(feedEvent);
+        addReviewToFeed(review, "LIKE", "REMOVE");
     }
 
     public void removeDislike(Long reviewId, Long userId) {
@@ -136,5 +101,16 @@ public class ReviewService {
     private void validateUserAndFilm(Long userId, Long filmId) {
         userStorage.getUserById(userId);
         filmStorage.getFilmById(filmId);
+    }
+
+    private void addReviewToFeed(Review review, String eventType, String operation) {
+        FeedEvent feedEvent = FeedEvent.builder()
+                .timestamp(Timestamp.from(Instant.now()))
+                .userId(review.getUserId())
+                .eventType(new EventType(eventTypes.get(eventType), null))
+                .operation(new Operation(operations.get(operation), null))
+                .entityId(review.getReviewId())
+                .build();
+        feedStorage.addToFeed(feedEvent);
     }
 }

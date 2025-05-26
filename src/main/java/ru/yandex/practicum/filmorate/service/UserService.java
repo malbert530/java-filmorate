@@ -74,27 +74,13 @@ public class UserService {
 
     public User addFriend(Long id, Long friendId) {
         User user = userStorage.addFriend(id, friendId);
-        FeedEvent feedEvent = FeedEvent.builder()
-                .timestamp(Timestamp.from(Instant.now()))
-                .userId(id)
-                .eventType(new EventType(eventTypes.get("FRIEND"), null))
-                .operation(new Operation(operations.get("ADD"), null))
-                .entityId(friendId)
-                .build();
-        feedStorage.addToFeed(feedEvent);
+        addFriendToFeed(id, friendId, "FRIEND", "ADD");
         return user;
     }
 
     public User deleteFriend(Long id, Long friendId) {
         User deletedFriendUser = userStorage.deleteFriend(id, friendId);
-        FeedEvent feedEvent = FeedEvent.builder()
-                .timestamp(Timestamp.from(Instant.now()))
-                .userId(id)
-                .eventType(new EventType(eventTypes.get("FRIEND"), null))
-                .operation(new Operation(operations.get("REMOVE"), null))
-                .entityId(friendId)
-                .build();
-        feedStorage.addToFeed(feedEvent);
+        addFriendToFeed(id, friendId, "FRIEND", "REMOVE");
         return deletedFriendUser;
     }
 
@@ -190,5 +176,16 @@ public class UserService {
         Set<Long> intersection = new HashSet<>(user1Likes);
         intersection.retainAll(user2Likes);
         return intersection.size();
+    }
+
+    private void addFriendToFeed(Long id, Long friendId, String eventType, String operation) {
+        FeedEvent feedEvent = FeedEvent.builder()
+                .timestamp(Timestamp.from(Instant.now()))
+                .userId(id)
+                .eventType(new EventType(eventTypes.get(eventType), null))
+                .operation(new Operation(operations.get(operation), null))
+                .entityId(friendId)
+                .build();
+        feedStorage.addToFeed(feedEvent);
     }
 }

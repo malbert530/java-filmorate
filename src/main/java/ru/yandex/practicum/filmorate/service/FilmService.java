@@ -107,27 +107,13 @@ public class FilmService {
     public void putLike(Long id, Long userId) {
         userStorage.getUserById(userId);
         filmStorage.putLike(id, userId);
-        FeedEvent feedEvent = FeedEvent.builder()
-                .timestamp(Timestamp.from(Instant.now()))
-                .userId(userId)
-                .eventType(new EventType(eventTypes.get("LIKE"), null))
-                .operation(new Operation(operations.get("ADD"), null))
-                .entityId(id)
-                .build();
-        feedStorage.addToFeed(feedEvent);
+        addFilmLikeToFeed(userId, id, "LIKE", "ADD");
     }
 
     public void deleteLike(Long id, Long userId) {
         userStorage.getUserById(userId);
         filmStorage.deleteLike(id, userId);
-        FeedEvent feedEvent = FeedEvent.builder()
-                .timestamp(Timestamp.from(Instant.now()))
-                .userId(userId)
-                .eventType(new EventType(eventTypes.get("LIKE"), null))
-                .operation(new Operation(operations.get("REMOVE"), null))
-                .entityId(id)
-                .build();
-        feedStorage.addToFeed(feedEvent);
+        addFilmLikeToFeed(userId, id, "LIKE", "REMOVE");
     }
 
     public List<FilmDto> getPopularFilms(Integer count, Integer genreId, Integer year) {
@@ -244,5 +230,16 @@ public class FilmService {
                     .toList();
         }
         return dtoList;
+    }
+
+    private void addFilmLikeToFeed(Long userId, Long filmId, String eventType, String operation) {
+        FeedEvent feedEvent = FeedEvent.builder()
+                .timestamp(Timestamp.from(Instant.now()))
+                .userId(userId)
+                .eventType(new EventType(eventTypes.get(eventType), null))
+                .operation(new Operation(operations.get(operation), null))
+                .entityId(filmId)
+                .build();
+        feedStorage.addToFeed(feedEvent);
     }
 }
