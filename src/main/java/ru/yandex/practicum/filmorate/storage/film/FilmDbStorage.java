@@ -16,8 +16,10 @@ import ru.yandex.practicum.filmorate.storage.film.mapper.FilmExtractor;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -92,6 +94,37 @@ public class FilmDbStorage implements FilmStorage {
             "  SELECT ful2.film_id FROM film_user_like ful2 " +
             "  WHERE ful2.user_id = ?" +
             ") " +
+            "ORDER BY (SELECT COUNT(*) FROM film_user_like WHERE film_id = f.id) DESC";
+    private static final String SEARCH_FILM_BY_TITLE = "SELECT f.*, r.name AS rating_name, g.id AS genre_id, " +
+            "g.name AS genre_name, fd.director_id, d.name AS director_name " +
+            "FROM (SELECT * FROM films WHERE name LIKE ?) AS f " +
+            "JOIN rating r ON f.rating_id = r.id " +
+            "LEFT JOIN film_genre fg ON f.id = fg.film_id " +
+            "LEFT JOIN genres g ON fg.genre_id = g.id " +
+            "LEFT JOIN film_director fd ON fd.film_id = f.id " +
+            "LEFT JOIN directors d ON d.id = fd.director_id " +
+            "ORDER BY (SELECT COUNT(*) FROM film_user_like WHERE film_id = f.id) DESC";
+    private static final String SEARCH_FILM_BY_DIRECTOR = "SELECT f.*, r.name AS rating_name, g.id AS genre_id, " +
+            "g.name AS genre_name, fd.director_id, d.name AS director_name " +
+            "FROM films f " +
+            "JOIN rating r ON f.rating_id = r.id " +
+            "LEFT JOIN film_genre fg ON f.id = fg.film_id " +
+            "LEFT JOIN genres g ON fg.genre_id = g.id " +
+            "LEFT JOIN film_director fd ON fd.film_id = f.id " +
+            "LEFT JOIN directors d ON d.id = fd.director_id " +
+            "WHERE fd.director_id IN (SELECT id FROM directors " +
+            "WHERE name LIKE ?) " +
+            "ORDER BY (SELECT COUNT(*) FROM film_user_like WHERE film_id = f.id) DESC";
+    private static final String SEARCH_FILM_BY_DIRECTOR_AND_TITLE = "SELECT f.*, r.name AS rating_name, g.id AS genre_id, " +
+            "g.name AS genre_name, fd.director_id, d.name AS director_name " +
+            "FROM films f " +
+            "JOIN rating r ON f.rating_id = r.id " +
+            "LEFT JOIN film_genre fg ON f.id = fg.film_id " +
+            "LEFT JOIN genres g ON fg.genre_id = g.id " +
+            "LEFT JOIN film_director fd ON fd.film_id = f.id " +
+            "LEFT JOIN directors d ON d.id = fd.director_id " +
+            "WHERE fd.director_id IN (SELECT id FROM directors " +
+            "WHERE name LIKE ?) OR f.name LIKE ? " +
             "ORDER BY (SELECT COUNT(*) FROM film_user_like WHERE film_id = f.id) DESC";
 
     private static final String FIND_POPULAR_WITH_FILTERS =
@@ -244,6 +277,26 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
+    public List<Film> getFilmsByIds(Collection<Long> ids) {
+
+        String idsString = ids.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
+
+        String sql = "SELECT f.*, r.name AS rating_name, " +
+                "g.id AS genre_id, g.name AS genre_name, " +
+                "d.id AS director_id, d.name AS director_name " +
+                "FROM films f " +
+                "JOIN rating r ON f.rating_id = r.id " +
+                "LEFT JOIN film_genre fg ON f.id = fg.film_id " +
+                "LEFT JOIN genres g ON fg.genre_id = g.id " +
+                "LEFT JOIN film_director fd ON f.id = fd.film_id " +
+                "LEFT JOIN directors d ON fd.director_id = d.id " +
+                "WHERE f.id IN (" + idsString + ")";
+
+        return jdbc.query(sql, filmExtractor);
+    }
+
     public List<Film> getFilmByDirectorIdSortedByYear(Long id) {
         return jdbc.query(FIND_DIRECTOR_FILMS_SORTED_BY_YEAR, filmExtractor, id);
     }
@@ -281,5 +334,23 @@ public class FilmDbStorage implements FilmStorage {
                 return genreIds.size();
             }
         });
+    }
+
+    @Override
+    public List<Film> getFilmsByDirector(String query) {
+        String s = "%" + query + "%";
+        return jdbc.query(SEARCH_FILM_BY_DIRECTOR, filmExtractor, s);
+    }
+
+    @Override
+    public List<Film> getFilmsByTitle(String query) {
+        String s = "%" + query + "%";
+        return jdbc.query(SEARCH_FILM_BY_TITLE, filmExtractor, s);
+    }
+
+    @Override
+    public List<Film> getFilmsByDirectorAndTitle(String query) {
+        String s = "%" + query + "%";
+        return jdbc.query(SEARCH_FILM_BY_DIRECTOR_AND_TITLE, filmExtractor, s, s);
     }
 }

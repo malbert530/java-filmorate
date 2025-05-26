@@ -96,4 +96,10 @@ public class FilmController {
         log.info("Получен HTTP-запрос на получение списка фильмов по id режиссера {}", id);
         return filmService.getFilmsByDirectorId(id, sortBy);
     }
+
+    @GetMapping("/search")
+    public List<FilmDto> getFilmsBySearch(@RequestParam String query, @RequestParam List<String> by) {
+        log.info("Получен HTTP-запрос на поиск фильмов");
+        return filmService.getFilmsBySearch(query, by);
+    }
 }
