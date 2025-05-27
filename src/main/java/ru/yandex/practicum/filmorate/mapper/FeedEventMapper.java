@@ -6,7 +6,7 @@ import ru.yandex.practicum.filmorate.model.FeedEvent;
 public class FeedEventMapper {
     public static FeedEventDto convertToDto(FeedEvent feedEvent) {
         return FeedEventDto.builder()
-                .id(feedEvent.getId())
+                .eventId(feedEvent.getEventId())
                 .userId(feedEvent.getUserId())
                 .operation(feedEvent.getOperation().getName())
                 .eventType(feedEvent.getEventType().getName())

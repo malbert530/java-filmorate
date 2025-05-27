@@ -133,6 +133,9 @@ ALTER TABLE review_likes ADD FOREIGN KEY (user_id) REFERENCES users (id) ON DELE
 ALTER TABLE film_director ADD FOREIGN KEY (film_id) REFERENCES films (id) ON DELETE CASCADE;
 
 ALTER TABLE film_director ADD FOREIGN KEY (director_id) REFERENCES directors (id) ON DELETE CASCADE;
+
 ALTER TABLE feed_events ADD FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE;
+
 ALTER TABLE feed_events ADD FOREIGN KEY (eventType_id) REFERENCES eventTypes (id);
+
 ALTER TABLE feed_events ADD FOREIGN KEY (operation_id) REFERENCES operations (id);

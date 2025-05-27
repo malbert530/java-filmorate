@@ -82,11 +82,14 @@ public class FilmDbStorage implements FilmStorage {
             "JOIN (SELECT fd.*, d.name director_name FROM film_director fd " +
             "JOIN directors d ON fd.director_id = d.id WHERE d.id = ?) directors ON directors.film_id = f.id";
 
-    private static final String FIND_COMMON = "SELECT f.*, r.name AS rating_name, g.id AS genre_id, g.name AS genre_name " +
+    private static final String FIND_COMMON = "SELECT f.*, r.name AS rating_name, g.id AS genre_id, g.name AS genre_name, " +
+            "fd.director_id, d.name AS director_name " +
             "FROM films f " +
             "JOIN rating r ON f.rating_id = r.id " +
             "LEFT JOIN film_genre fg ON f.id = fg.film_id " +
             "LEFT JOIN genres g ON fg.genre_id = g.id " +
+            "LEFT JOIN film_director fd ON fd.film_id = f.ID " +
+            "LEFT JOIN directors d ON d.id = fd.director_id " +
             "WHERE f.id IN (" +
             "  SELECT ful1.film_id FROM film_user_like ful1 " +
             "  WHERE ful1.user_id = ? " +
@@ -97,7 +100,7 @@ public class FilmDbStorage implements FilmStorage {
             "ORDER BY (SELECT COUNT(*) FROM film_user_like WHERE film_id = f.id) DESC";
     private static final String SEARCH_FILM_BY_TITLE = "SELECT f.*, r.name AS rating_name, g.id AS genre_id, " +
             "g.name AS genre_name, fd.director_id, d.name AS director_name " +
-            "FROM (SELECT * FROM films WHERE name LIKE ?) AS f " +
+            "FROM (SELECT * FROM films WHERE LOWER(name) LIKE LOWER(?)) AS f " +
             "JOIN rating r ON f.rating_id = r.id " +
             "LEFT JOIN film_genre fg ON f.id = fg.film_id " +
             "LEFT JOIN genres g ON fg.genre_id = g.id " +
@@ -113,7 +116,7 @@ public class FilmDbStorage implements FilmStorage {
             "LEFT JOIN film_director fd ON fd.film_id = f.id " +
             "LEFT JOIN directors d ON d.id = fd.director_id " +
             "WHERE fd.director_id IN (SELECT id FROM directors " +
-            "WHERE name LIKE ?) " +
+            "WHERE LOWER(name) LIKE LOWER(?)) " +
             "ORDER BY (SELECT COUNT(*) FROM film_user_like WHERE film_id = f.id) DESC";
     private static final String SEARCH_FILM_BY_DIRECTOR_AND_TITLE = "SELECT f.*, r.name AS rating_name, g.id AS genre_id, " +
             "g.name AS genre_name, fd.director_id, d.name AS director_name " +
@@ -124,31 +127,21 @@ public class FilmDbStorage implements FilmStorage {
             "LEFT JOIN film_director fd ON fd.film_id = f.id " +
             "LEFT JOIN directors d ON d.id = fd.director_id " +
             "WHERE fd.director_id IN (SELECT id FROM directors " +
-            "WHERE name LIKE ?) OR f.name LIKE ? " +
+            "WHERE LOWER(name) LIKE LOWER(?)) OR LOWER(f.name) LIKE LOWER(?) " +
             "ORDER BY (SELECT COUNT(*) FROM film_user_like WHERE film_id = f.id) DESC";
 
-    private static final String FIND_POPULAR_WITH_FILTERS =
-            "SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id, " +
-                    "r.name AS rating_name, COALESCE(l.like_count, 0) AS like_count, " +
-                    "g.genre_id, g.genre_name, d.director_id, d.director_name " +
-                    "FROM films f " +
-                    "JOIN rating r ON f.rating_id = r.id " +
-                    "LEFT JOIN (" +
-                    "    SELECT film_id, COUNT(user_id) AS like_count " +
-                    "    FROM film_user_like " +
-                    "    GROUP BY film_id" +
-                    ") l ON f.id = l.film_id " +
-                    "LEFT JOIN (" +
-                    "    SELECT fg.film_id, g.id AS genre_id, g.name AS genre_name " +
-                    "    FROM film_genre fg " +
-                    "    JOIN genres g ON fg.genre_id = g.id" +
-                    ") g ON g.film_id = f.id " +
-                    "LEFT JOIN (" +
-                    "    SELECT fd.film_id, d.id AS director_id, d.name AS director_name " +
-                    "    FROM film_director fd " +
-                    "    JOIN directors d ON fd.director_id = d.id" +
-                    ") d ON d.film_id = f.id " +
-                    "WHERE 1=1 ";
+    private static final String FIND_POPULAR_WITH_FILTERS = "SELECT f.*, r.name rating_name, g.genre_name, " +
+            "g.genre_id,directors.director_id, directors.director_name, likes.like_count " +
+            "FROM films f JOIN rating r ON f.rating_id = r.id " +
+            "LEFT JOIN (SELECT fg.*, g.name genre_name FROM film_genre fg " +
+            "           JOIN genres g ON fg.genre_id = g.id) g ON g.film_id = f.id " +
+            "RIGHT JOIN (SELECT f.id, l.like_count FROM films f " +
+            "LEFT JOIN (SELECT film_id, COUNT(user_id) AS like_count " +
+            "FROM film_user_like GROUP BY film_id) AS l ON f.id = l.film_id " +
+            "ORDER BY l.like_count DESC LIMIT ?) likes ON likes.id = f.id " +
+            "LEFT JOIN (SELECT fd.*, d.name director_name FROM film_director fd " +
+            "JOIN directors d ON fd.director_id = d.id) directors ON directors.film_id = f.id " +
+            "WHERE 1 = 1 ";
 
     private final JdbcTemplate jdbc;
     private final FilmExtractor filmExtractor;
@@ -174,12 +167,12 @@ public class FilmDbStorage implements FilmStorage {
 
         Long id = keyHolder.getKeyAs(Long.class);
 
-        if (film.getGenre() != null) {
+        if (film.getGenre() != null && !film.getGenre().isEmpty()) {
             List<Integer> genreIds = film.getGenre().stream().map(Genre::getId).toList();
             batchInsertGenre(id, genreIds);
         }
 
-        if (film.getDirectors() != null) {
+        if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
             List<Long> directorIds = film.getDirectors().stream().map(Director::getId).toList();
             batchInsertDirector(id, directorIds);
         }
@@ -206,13 +199,13 @@ public class FilmDbStorage implements FilmStorage {
         }
 
         jdbc.update(DELETE_FILM_GENRES, newFilm.getId());
-        if (newFilm.getGenre() != null) {
+        if (newFilm.getGenre() != null && !newFilm.getGenre().isEmpty()) {
             List<Integer> genreIds = newFilm.getGenre().stream().map(Genre::getId).toList();
             batchInsertGenre(newFilm.getId(), genreIds);
         }
 
         jdbc.update(DELETE_FILM_DIRECTORS, newFilm.getId());
-        if (newFilm.getDirectors() != null) {
+        if (newFilm.getDirectors() != null && !newFilm.getDirectors().isEmpty()) {
             List<Long> directorIds = newFilm.getDirectors().stream().map(Director::getId).toList();
             batchInsertDirector(newFilm.getId(), directorIds);
         }
@@ -242,9 +235,10 @@ public class FilmDbStorage implements FilmStorage {
     public List<Film> getPopularFilms(Integer count, Integer genreId, Integer year) {
         StringBuilder sql = new StringBuilder(FIND_POPULAR_WITH_FILTERS);
         List<Object> params = new ArrayList<>();
+        params.add(count);
 
         if (genreId != null) {
-            sql.append("AND g.genre_id = ? ");
+            sql.append("AND f.id IN(SELECT film_id FROM film_genre WHERE genre_id = ?) ");
             params.add(genreId);
         }
 
@@ -252,10 +246,6 @@ public class FilmDbStorage implements FilmStorage {
             sql.append("AND EXTRACT(YEAR FROM f.release_date) = ? ");
             params.add(year);
         }
-
-        sql.append("ORDER BY COALESCE(l.like_count, 0) DESC ");
-        sql.append("LIMIT ?");
-        params.add(count);
 
         return jdbc.query(sql.toString(), filmExtractor, params.toArray());
     }

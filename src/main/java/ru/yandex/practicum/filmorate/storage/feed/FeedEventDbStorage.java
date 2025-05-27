@@ -52,7 +52,7 @@ public class FeedEventDbStorage implements FeedEventStorage {
         Long id = keyHolder.getKeyAs(Long.class);
 
         if (id != null) {
-            feedEvent.setId(id);
+            feedEvent.setEventId(id);
         } else {
             throw new RuntimeException("Не удалось сохранить данные");
         }

@@ -148,6 +148,7 @@ public class UserService {
     }
 
     public List<FeedEvent> getFeed(Long userId) {
+        userStorage.getUserById(userId);
         return feedStorage.getFeed(userId);
     }
 

@@ -8,7 +8,7 @@ import lombok.Data;
 @AllArgsConstructor
 @Builder
 public class FeedEventDto {
-    private Long id;
+    private Long eventId;
     private long timestamp;
     private Long userId;
     private String eventType;

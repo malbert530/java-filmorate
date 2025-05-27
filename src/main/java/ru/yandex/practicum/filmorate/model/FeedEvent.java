@@ -12,7 +12,7 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 @Builder
 public class FeedEvent {
-    private Long id;
+    private Long eventId;
     private Timestamp timestamp;
     private Long userId;
     private EventType eventType;

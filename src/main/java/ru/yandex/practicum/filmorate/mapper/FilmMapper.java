@@ -47,9 +47,8 @@ public final class FilmMapper {
         if (request.hasGenre()) {
             film.setGenre(request.getGenres());
         }
-        if (request.hasDirector()) {
-            film.setDirectors(request.getDirectors());
-        }
+
+        film.setDirectors(request.getDirectors());
         return film;
     }
 }
