@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.FeedEvent;
@@ -17,6 +18,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class ReviewService {
 
@@ -74,9 +76,8 @@ public class ReviewService {
 
     public void addLike(Long reviewId, Long userId) {
         userStorage.getUserById(userId);
-        Review review = getById(reviewId);
+        getById(reviewId);
         reviewStorage.addLike(reviewId, userId);
-        addReviewToFeed(review, "LIKE", "ADD");
     }
 
     public void addDislike(Long reviewId, Long userId) {
@@ -87,9 +88,8 @@ public class ReviewService {
 
     public void removeLike(Long reviewId, Long userId) {
         userStorage.getUserById(userId);
-        Review review = getById(reviewId);
+        getById(reviewId);
         reviewStorage.removeLike(reviewId, userId);
-        addReviewToFeed(review, "LIKE", "REMOVE");
     }
 
     public void removeDislike(Long reviewId, Long userId) {
