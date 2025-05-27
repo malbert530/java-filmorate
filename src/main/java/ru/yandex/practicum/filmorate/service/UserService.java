@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
@@ -8,20 +7,36 @@ import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.*;
+import ru.yandex.practicum.filmorate.storage.feed.EventTypeDbStorage;
+import ru.yandex.practicum.filmorate.storage.feed.FeedEventStorage;
+import ru.yandex.practicum.filmorate.storage.feed.OperationDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class UserService {
     private final UserStorage userStorage;
     private final FilmStorage filmStorage;
+    private final FeedEventStorage feedStorage;
+
+    private final Map<String, Integer> operations;
+    private final Map<String, Integer> eventTypes;
+
+    public UserService(UserStorage userStorage, FilmStorage filmStorage,
+                       FeedEventStorage feedStorage, OperationDbStorage operationStorage, EventTypeDbStorage eventTypeStorage) {
+        this.userStorage = userStorage;
+        this.feedStorage = feedStorage;
+        this.filmStorage = filmStorage;
+        operations = operationStorage.getMap();
+        eventTypes = eventTypeStorage.getMap();
+    }
 
     public Collection<User> findAll() {
         return userStorage.findAll();
@@ -59,11 +74,14 @@ public class UserService {
 
     public User addFriend(Long id, Long friendId) {
         User user = userStorage.addFriend(id, friendId);
+        addFriendToFeed(id, friendId, "FRIEND", "ADD");
         return user;
     }
 
     public User deleteFriend(Long id, Long friendId) {
-        return userStorage.deleteFriend(id, friendId);
+        User deletedFriendUser = userStorage.deleteFriend(id, friendId);
+        addFriendToFeed(id, friendId, "FRIEND", "REMOVE");
+        return deletedFriendUser;
     }
 
     public Collection<User> getUserFriends(Long id) {
@@ -129,6 +147,10 @@ public class UserService {
         return mostSimilarUsers;
     }
 
+    public List<FeedEvent> getFeed(Long userId) {
+        return feedStorage.getFeed(userId);
+    }
+
     private Set<Long> getRecommendationsFromSimilarUsers(Long userId, Set<Long> similarUsers, Map<Long, Set<Long>> allLikes) {
         Set<Long> userLikes = allLikes.get(userId);
         Set<Long> recommendations = new HashSet<>();
@@ -154,5 +176,16 @@ public class UserService {
         Set<Long> intersection = new HashSet<>(user1Likes);
         intersection.retainAll(user2Likes);
         return intersection.size();
+    }
+
+    private void addFriendToFeed(Long id, Long friendId, String eventType, String operation) {
+        FeedEvent feedEvent = FeedEvent.builder()
+                .timestamp(Timestamp.from(Instant.now()))
+                .userId(id)
+                .eventType(new EventType(eventTypes.get(eventType), null))
+                .operation(new Operation(operations.get(operation), null))
+                .entityId(friendId)
+                .build();
+        feedStorage.addToFeed(feedEvent);
     }
 }

@@ -40,7 +40,6 @@ public class UserDbStorage implements UserStorage {
     private static final String DELETE_USER_QUERY = "DELETE FROM users WHERE id = ?";
 
 
-
     private final JdbcTemplate jdbc;
     private final UserRowMapper mapper;
 

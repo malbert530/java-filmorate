@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -9,26 +8,24 @@ import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
-import ru.yandex.practicum.filmorate.model.Director;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Rating;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.director.DirectorDbStorage;
+import ru.yandex.practicum.filmorate.storage.feed.EventTypeDbStorage;
+import ru.yandex.practicum.filmorate.storage.feed.FeedEventStorage;
+import ru.yandex.practicum.filmorate.storage.feed.OperationDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.rating.RatingDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 @Qualifier("userDbStorage")
 public class FilmService {
     private final FilmStorage filmStorage;
@@ -36,6 +33,23 @@ public class FilmService {
     private final GenreDbStorage genreStorage;
     private final RatingDbStorage ratingStorage;
     private final DirectorDbStorage directorStorage;
+    private final FeedEventStorage feedStorage;
+
+    private final Map<String, Integer> operations;
+    private final Map<String, Integer> eventTypes;
+
+    public FilmService(FilmStorage filmStorage, UserStorage userStorage,
+                       GenreDbStorage genreStorage, RatingDbStorage ratingStorage, FeedEventStorage feedStorage,
+                       OperationDbStorage operationStorage, EventTypeDbStorage eventTypeStorage, DirectorDbStorage directorStorage) {
+        this.filmStorage = filmStorage;
+        this.userStorage = userStorage;
+        this.genreStorage = genreStorage;
+        this.ratingStorage = ratingStorage;
+        this.feedStorage = feedStorage;
+        this.directorStorage = directorStorage;
+        operations = operationStorage.getMap();
+        eventTypes = eventTypeStorage.getMap();
+    }
 
     public Collection<FilmDto> findAll() {
         List<FilmDto> dtoList = new ArrayList<>();
@@ -93,11 +107,13 @@ public class FilmService {
     public void putLike(Long id, Long userId) {
         userStorage.getUserById(userId);
         filmStorage.putLike(id, userId);
+        addFilmLikeToFeed(userId, id, "LIKE", "ADD");
     }
 
     public void deleteLike(Long id, Long userId) {
         userStorage.getUserById(userId);
         filmStorage.deleteLike(id, userId);
+        addFilmLikeToFeed(userId, id, "LIKE", "REMOVE");
     }
 
     public List<FilmDto> getPopularFilms(Integer count, Integer genreId, Integer year) {
@@ -214,5 +230,16 @@ public class FilmService {
                     .toList();
         }
         return dtoList;
+    }
+
+    private void addFilmLikeToFeed(Long userId, Long filmId, String eventType, String operation) {
+        FeedEvent feedEvent = FeedEvent.builder()
+                .timestamp(Timestamp.from(Instant.now()))
+                .userId(userId)
+                .eventType(new EventType(eventTypes.get(eventType), null))
+                .operation(new Operation(operations.get(operation), null))
+                .entityId(filmId)
+                .build();
+        feedStorage.addToFeed(feedEvent);
     }
 }

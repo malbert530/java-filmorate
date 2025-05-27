@@ -19,43 +19,32 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReviewDbStorage implements ReviewStorage {
 
-    private final JdbcTemplate jdbc;
-    private final ReviewRowMapper mapper;
-
     private static final String INSERT_REVIEW_SQL =
             "INSERT INTO reviews (content, is_positive, user_id, film_id, useful) VALUES (?, ?, ?, ?, ?)";
-
     private static final String SELECT_REVIEW_BY_ID =
             "SELECT * FROM reviews WHERE review_id = ?";
-
     private static final String UPDATE_REVIEW_SQL =
             "UPDATE reviews SET content = ?, is_positive = ? WHERE review_id = ?";
-
     private static final String DELETE_REVIEW_SQL =
             "DELETE FROM reviews WHERE review_id = ?";
-
     private static final String SELECT_ALL =
             "SELECT * FROM reviews ORDER BY useful DESC LIMIT ?";
-
     private static final String SELECT_ALL_BY_FILM =
             "SELECT * FROM reviews WHERE film_id = ? ORDER BY useful DESC LIMIT ?";
-
     private static final String INSERT_REVIEW_LIKE =
             "INSERT INTO review_likes (review_id, user_id, is_like) VALUES (?, ?, ?)";
-
     private static final String DELETE_REVIEW_LIKE =
             "DELETE FROM review_likes WHERE review_id = ? AND user_id = ?";
-
     private static final String UPDATE_USEFUL_INCREMENT =
             "UPDATE reviews SET useful = useful + ? WHERE review_id = ?";
-
     private static final String GET_REACTION_TYPE =
             "SELECT is_like FROM review_likes WHERE review_id = ? AND user_id = ?";
-
     private static final String UPDATE_REVIEW_LIKE_SET_TRUE =
             "UPDATE review_likes SET is_like = true WHERE review_id = ? AND user_id = ?";
     private static final String UPDATE_REVIEW_LIKE_SET_FALSE =
             "UPDATE review_likes SET is_like = false WHERE review_id = ? AND user_id = ?";
+    private final JdbcTemplate jdbc;
+    private final ReviewRowMapper mapper;
 
     @Override
     public Review create(Review review) {
