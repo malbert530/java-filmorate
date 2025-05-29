@@ -2,9 +2,11 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dto.FeedEventDto;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.mapper.FeedEventMapper;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.*;
@@ -74,13 +76,13 @@ public class UserService {
 
     public User addFriend(Long id, Long friendId) {
         User user = userStorage.addFriend(id, friendId);
-        addFriendToFeed(id, friendId, "FRIEND", "ADD");
+        addFriendToFeed(id, friendId, "ADD");
         return user;
     }
 
     public User deleteFriend(Long id, Long friendId) {
         User deletedFriendUser = userStorage.deleteFriend(id, friendId);
-        addFriendToFeed(id, friendId, "FRIEND", "REMOVE");
+        addFriendToFeed(id, friendId, "REMOVE");
         return deletedFriendUser;
     }
 
@@ -119,7 +121,7 @@ public class UserService {
     }
 
 
-    public Set<Long> findMostSimilarUsers(Long userId, Map<Long, Set<Long>> allLikes) {
+    private Set<Long> findMostSimilarUsers(Long userId, Map<Long, Set<Long>> allLikes) {
 
         Set<Long> userLikes = allLikes.get(userId);
 
@@ -147,9 +149,9 @@ public class UserService {
         return mostSimilarUsers;
     }
 
-    public List<FeedEvent> getFeed(Long userId) {
+    public List<FeedEventDto> getFeed(Long userId) {
         userStorage.getUserById(userId);
-        return feedStorage.getFeed(userId);
+        return feedStorage.getFeed(userId).stream().map(FeedEventMapper::convertToDto).toList();
     }
 
     private Set<Long> getRecommendationsFromSimilarUsers(Long userId, Set<Long> similarUsers, Map<Long, Set<Long>> allLikes) {
@@ -179,11 +181,11 @@ public class UserService {
         return intersection.size();
     }
 
-    private void addFriendToFeed(Long id, Long friendId, String eventType, String operation) {
+    private void addFriendToFeed(Long id, Long friendId, String operation) {
         FeedEvent feedEvent = FeedEvent.builder()
                 .timestamp(Timestamp.from(Instant.now()))
                 .userId(id)
-                .eventType(new EventType(eventTypes.get(eventType), null))
+                .eventType(new EventType(eventTypes.get("FRIEND"), null))
                 .operation(new Operation(operations.get(operation), null))
                 .entityId(friendId)
                 .build();

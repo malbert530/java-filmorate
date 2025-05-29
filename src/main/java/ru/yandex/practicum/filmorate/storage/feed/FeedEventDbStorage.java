@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.feed;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -13,7 +12,6 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
 
-@Slf4j
 @Component
 @Primary
 @RequiredArgsConstructor
@@ -36,7 +34,7 @@ public class FeedEventDbStorage implements FeedEventStorage {
     }
 
     @Override
-    public FeedEvent addToFeed(FeedEvent feedEvent) {
+    public void addToFeed(FeedEvent feedEvent) {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(connection -> {
             PreparedStatement ps = connection
@@ -57,6 +55,5 @@ public class FeedEventDbStorage implements FeedEventStorage {
             throw new RuntimeException("Не удалось сохранить данные");
         }
 
-        return feedEvent;
     }
 }

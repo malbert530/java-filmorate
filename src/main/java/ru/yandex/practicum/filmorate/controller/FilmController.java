@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
@@ -13,6 +14,7 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 import java.util.Collection;
 import java.util.List;
 
+@Validated
 @Slf4j
 @RestController
 @RequestMapping("/films")
@@ -44,9 +46,9 @@ public class FilmController {
 
     @GetMapping("/popular")
     public Collection<FilmDto> getPopularFilms(
-            @RequestParam(defaultValue = "10") @Min(0) Integer count,
+            @RequestParam(defaultValue = "10") @Min(1) Integer count,
             @RequestParam(required = false) Integer genreId,
-            @RequestParam(required = false) Integer year) {
+            @RequestParam(required = false) @Min(1895) Integer year) {
         log.info("Получен HTTP-запрос на получение популярных фильмов: count={}, genreId={}, year={}", count, genreId, year);
         Collection<FilmDto> popularFilms = filmService.getPopularFilms(count, genreId, year);
         log.info("Успешно обработан HTTP-запрос на получение популярных фильмов: count={}, genreId={}, year={}", count, genreId, year);

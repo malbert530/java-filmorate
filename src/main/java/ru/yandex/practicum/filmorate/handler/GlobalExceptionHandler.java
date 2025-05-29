@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.handler;
 
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -64,4 +65,11 @@ public class GlobalExceptionHandler {
     public ApiError handleReviewNotFound(ReviewNotFoundException e) {
         return ApiError.builder().error(e.getMessage()).errorCode(HttpStatus.NOT_FOUND.value()).build();
     }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleArgumentNotValid(ConstraintViolationException e) {
+        return ApiError.builder().error(e.getMessage()).errorCode(HttpStatus.BAD_REQUEST.value()).build();
+    }
+
 }

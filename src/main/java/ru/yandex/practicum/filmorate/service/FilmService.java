@@ -107,13 +107,13 @@ public class FilmService {
     public void putLike(Long id, Long userId) {
         userStorage.getUserById(userId);
         filmStorage.putLike(id, userId);
-        addFilmLikeToFeed(userId, id, "LIKE", "ADD");
+        addFilmLikeToFeed(userId, id, "ADD");
     }
 
     public void deleteLike(Long id, Long userId) {
         userStorage.getUserById(userId);
         filmStorage.deleteLike(id, userId);
-        addFilmLikeToFeed(userId, id, "LIKE", "REMOVE");
+        addFilmLikeToFeed(userId, id, "REMOVE");
     }
 
     public List<FilmDto> getPopularFilms(Integer count, Integer genreId, Integer year) {
@@ -195,12 +195,12 @@ public class FilmService {
         List<FilmDto> dtoList = new ArrayList<>();
         List<Film> films = new ArrayList<>();
         if (query.isBlank()) {
-            String errorMessage = String.format("Пустой параметр запроса - %s", query);
+            String errorMessage = "Пустой параметр запроса query";
             log.warn(errorMessage);
             throw new ValidationException(errorMessage);
         }
         if (by.isEmpty()) {
-            String errorMessage = String.format("Пустой параметр запроса - %s", by);
+            String errorMessage = "Пустой параметр запроса by";
             log.warn(errorMessage);
             throw new ValidationException(errorMessage);
         }
@@ -232,11 +232,11 @@ public class FilmService {
         return dtoList;
     }
 
-    private void addFilmLikeToFeed(Long userId, Long filmId, String eventType, String operation) {
+    private void addFilmLikeToFeed(Long userId, Long filmId, String operation) {
         FeedEvent feedEvent = FeedEvent.builder()
                 .timestamp(Timestamp.from(Instant.now()))
                 .userId(userId)
-                .eventType(new EventType(eventTypes.get(eventType), null))
+                .eventType(new EventType(eventTypes.get("LIKE"), null))
                 .operation(new Operation(operations.get(operation), null))
                 .entityId(filmId)
                 .build();

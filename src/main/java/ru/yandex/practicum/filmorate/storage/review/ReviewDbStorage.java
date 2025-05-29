@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.review;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -14,7 +13,6 @@ import ru.yandex.practicum.filmorate.storage.review.mapper.ReviewRowMapper;
 import java.sql.Statement;
 import java.util.List;
 
-@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ReviewDbStorage implements ReviewStorage {

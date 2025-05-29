@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.FeedEvent;
@@ -18,7 +17,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
-@Slf4j
+
 @Service
 public class ReviewService {
 
@@ -43,7 +42,7 @@ public class ReviewService {
     public Review create(Review review) {
         validateUserAndFilm(review.getUserId(), review.getFilmId());
         Review createdReview = reviewStorage.create(review);
-        addReviewToFeed(createdReview, "REVIEW", "ADD");
+        addReviewToFeed(createdReview, "ADD");
         return createdReview;
     }
 
@@ -53,13 +52,13 @@ public class ReviewService {
         review.setFilmId(existing.getFilmId());
         review.setUseful(existing.getUseful());
         Review updatedReview = reviewStorage.update(review);
-        addReviewToFeed(review, "REVIEW", "UPDATE");
+        addReviewToFeed(review, "UPDATE");
         return updatedReview;
     }
 
     public void delete(Long id) {
         Review review = getById(id);
-        addReviewToFeed(review, "REVIEW", "REMOVE");
+        addReviewToFeed(review, "REMOVE");
         reviewStorage.delete(id);
     }
 
@@ -103,11 +102,11 @@ public class ReviewService {
         filmStorage.getFilmById(filmId);
     }
 
-    private void addReviewToFeed(Review review, String eventType, String operation) {
+    private void addReviewToFeed(Review review, String operation) {
         FeedEvent feedEvent = FeedEvent.builder()
                 .timestamp(Timestamp.from(Instant.now()))
                 .userId(review.getUserId())
-                .eventType(new EventType(eventTypes.get(eventType), null))
+                .eventType(new EventType(eventTypes.get("REVIEW"), null))
                 .operation(new Operation(operations.get(operation), null))
                 .entityId(review.getReviewId())
                 .build();

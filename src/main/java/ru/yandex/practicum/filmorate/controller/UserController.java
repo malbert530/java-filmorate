@@ -98,6 +98,6 @@ public class UserController {
     @GetMapping("/{id}/feed")
     public List<FeedEventDto> getFeed(@PathVariable Long id) {
         log.info("Получен HTTP-запрос на получение ленту событий пользователя с id {}", id);
-        return userService.getFeed(id).stream().map(FeedEventMapper::convertToDto).toList();
+        return userService.getFeed(id);
     }
 }
