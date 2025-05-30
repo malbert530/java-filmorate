@@ -1,9 +1,13 @@
 package ru.yandex.practicum.filmorate.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Rating;
 
@@ -21,10 +25,10 @@ public class FilmDto {
     String description;
     @Positive(message = "Продолжительность фильма должна быть положительным числом")
     Integer duration;
-    @PastOrPresent
     @NotNull
     LocalDate releaseDate;
     @Positive(message = "Рейтинг фильма должна быть положительным числом")
     Rating mpa;
     TreeSet<Genre> genres;
+    TreeSet<Director> directors;
 }

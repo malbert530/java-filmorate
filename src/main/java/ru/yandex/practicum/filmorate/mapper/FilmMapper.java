@@ -19,12 +19,13 @@ public final class FilmMapper {
         film.setRating(request.getMpa());
         film.setGenre(request.getGenres());
         film.setLikes(new TreeSet<>());
+        film.setDirectors(request.getDirectors());
         return film;
     }
 
     public static FilmDto convertToDto(Film film) {
         return new FilmDto(film.getId(), film.getName(), film.getDescription(), film.getDuration(),
-                film.getReleaseDate(), film.getRating(), film.getGenre());
+                film.getReleaseDate(), film.getRating(), film.getGenre(), film.getDirectors());
     }
 
     public static Film updateFilmFields(Film film, UpdateFilmRequest request) {
@@ -46,6 +47,8 @@ public final class FilmMapper {
         if (request.hasGenre()) {
             film.setGenre(request.getGenres());
         }
+
+        film.setDirectors(request.getDirectors());
         return film;
     }
 }

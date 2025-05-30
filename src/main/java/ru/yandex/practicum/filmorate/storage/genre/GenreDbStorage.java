@@ -9,7 +9,9 @@ import ru.yandex.practicum.filmorate.exception.GenreNotFoundException;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.genre.mapper.GenreRowMapper;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.TreeSet;
 
 @Slf4j
 @Component
