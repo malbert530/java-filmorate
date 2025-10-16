@@ -7,8 +7,7 @@ Filmorate - это бэкенд для сервиса, который будет
 - Spring Boot (Web, Data JPA, Validation, Lombok)
 - REST API
 - PostgreSQL / H2 (тесты)  
-- Maven  
-- Docker
+- Maven
 
 ### Основные функциональности:
 - Создание и редактирование пользователей.
