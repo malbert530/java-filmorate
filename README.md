@@ -14,8 +14,57 @@ Filmorate - это бэкенд для сервиса, который будет
 - Создание и редактирование фильмов.
 - Список друзей у пользователей.
 - Рейтинг фильмов на основе лайков пользователей.
+- Отзывы к фильмам
 - Хранение данных в базе данных.
 
-Template repository for Filmorate project.<br>
+### Запуск локально
+```bash
+mvn clean install
+mvn spring-boot:run
+```
+### Используемые эндпоинты(основные)
+### Films
+
+POST /films — создать фильм
+
+PUT /films — обновить фильм
+
+GET /films/{id} — получить фильм по id
+
+GET /films — получить список фильмов
+
+PUT /films/{id}/like/{userId} — поставить лайк фильму от пользователя
+
+GET /films/common?userId=5&friendId=1 — получение общих фильмов пользователей
+
+GET /films/popular?count=5&genreId=1&year=2020 — популярные фильмы по жанру и году
+(по умолчанию 10 популярных всех времен и жанров)
+
+GET /films/search?query=text&by=title,director - поиск по режиссеру или названию
+
+### Users
+
+POST /users — создать пользователя
+
+PUT /users — обновить пользователя
+
+GET /users — список пользователей
+
+PUT /users/{id}/friends/{friendId} — добавить в друзья
+
+GET /users/{id}/friends — друзья пользователя
+
+GET /users/{id}/friends/common/{otherId} — общие друзья
+
+### Reviews
+
+POST /reviews — добавить отзыв
+
+PUT /reviews — обновить отзыв
+
+GET /reviews/{id}/like/{userId} — лайк отзыву от пользователя
+
+Также используются вспомогательные эндпойнты "/directors", "/genres", "/mpa" для работы с режиссерами, жанрами и рейтингами.
+
 ## ER-диаграмма
 ![ERD](/table.png)
